@@ -31,7 +31,7 @@ GPU Device
 - Thread scheduling optimized automatically
 - Memory hierarchy optimization built-in
 
-💡 **Note**: While this Part focuses on functional patterns, **warp-level programming** and advanced GPU memory management will be covered in detail in **Part VI (TODO)**.
+💡 **Note**: While this Part focuses on functional patterns, **warp-level programming** and advanced GPU memory management will be covered in detail in **[Part VI](../puzzle_21/puzzle_21.md)**.
 
 ### ⚡ **Four fundamental patterns**
 Master the complete spectrum of GPU functional programming:

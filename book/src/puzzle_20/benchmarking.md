@@ -279,3 +279,21 @@ With benchmarking mastery:
 - **Memory optimization**: Dive deeper into shared memory and advanced caching
 
 💡 **Key takeaway**: Benchmarking transforms theoretical understanding into practical performance optimization. Use empirical data to make informed decisions about which patterns work best for your specific hardware and workload characteristics.
+
+## Looking Ahead: When you need more control
+
+The functional patterns in Part V provide excellent performance for most workloads, but some algorithms require **direct thread communication**:
+
+### **Algorithms that benefit from warp programming:**
+- **Reductions**: Sum, max, min operations across thread groups
+- **Prefix operations**: Cumulative sums, running maximums
+- **Data shuffling**: Reorganizing data between threads
+- **Cooperative algorithms**: Where threads must coordinate closely
+
+### **Performance preview:**
+In Part VI, we'll revisit several algorithms from Part II and show how warp operations can:
+- **Simplify code**: Replace complex shared memory patterns with single function calls
+- **Improve performance**: Eliminate barriers and reduce memory traffic
+- **Enable new algorithms**: Unlock patterns impossible with pure functional approaches
+
+**Coming up next**: [Part VI: Warp-Level Programming](../puzzle_21/puzzle_21.md) - starting with a dramatic reimplementation of Puzzle 12's prefix sum.
