@@ -12,7 +12,6 @@ alias TPB = 128
 alias BLOCKS_PER_GRID = (1, 1)
 alias THREADS_PER_BLOCK = (TPB, 1)
 alias layout = Layout.row_major(SIZE)
-alias dtype = DType.float32
 
 
 # ANCHOR: softmax_gpu_kernel_solution
@@ -112,37 +111,38 @@ struct SoftmaxCustomOp:
         input_size: Int,
         dtype: DType = DType.float32,
     ](
-        output: OutputTensor[type=dtype, rank=1],
-        input: InputTensor[type=dtype, rank = output.rank],
+        output: OutputTensor[rank=1],
+        input: InputTensor[rank = output.rank],
         ctx: DeviceContextPtr,
     ) raises:
         # Note: rebind is necessary now but it shouldn't be!
-        var out_tensor = rebind[LayoutTensor[dtype, layout, MutableAnyOrigin]](
-            output.to_layout_tensor()
-        )
+        var output_tensor = rebind[
+            LayoutTensor[dtype, layout, MutableAnyOrigin]
+        ](output.to_layout_tensor())
         var input_tensor = rebind[
             LayoutTensor[dtype, layout, MutableAnyOrigin]
         ](input.to_layout_tensor())
+
         alias layout = input_tensor.layout
 
         @parameter
         if target == "gpu":
             gpu_ctx = ctx.get_device_context()
             # making sure the output tensor is zeroed out before the kernel is called
-            gpu_ctx.enqueue_memset(
-                DeviceBuffer[output.type](
-                    gpu_ctx,
-                    rebind[UnsafePointer[Scalar[output.type]]](out_tensor.ptr),
-                    input_size,
-                    owning=False,
-                ),
-                0,
-            )
+            # gpu_ctx.enqueue_memset(
+            #     DeviceBuffer[output.type](
+            #         gpu_ctx,
+            #         rebind[UnsafePointer[Scalar[output.type]]](out_tensor.ptr),
+            #         input_size,
+            #         owning=False,
+            #     ),
+            #     0,
+            # )
 
             gpu_ctx.enqueue_function[
                 softmax_gpu_kernel[layout, input_size, dtype]
             ](
-                out_tensor,
+                output_tensor,
                 input_tensor,
                 grid_dim=BLOCKS_PER_GRID,
                 block_dim=(TPB, 1),
@@ -150,7 +150,7 @@ struct SoftmaxCustomOp:
 
         elif target == "cpu":
             softmax_cpu_kernel[layout, input_size, dtype](
-                out_tensor, input_tensor
+                output_tensor, input_tensor
             )
         else:
             raise Error("Unsupported target: " + target)

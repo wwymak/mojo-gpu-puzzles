@@ -222,10 +222,10 @@ struct AttentionCustomOp:
         d: Int,
         dtype: DType = DType.float32,
     ](
-        output: OutputTensor[type=dtype, rank=1],  # Output vector (d,)
-        q: InputTensor[type=dtype, rank=1],  # Query vector (d,)
-        k: InputTensor[type=dtype, rank=2],  # Key matrix (seq_len, d)
-        v: InputTensor[type=dtype, rank=2],  # Value matrix (seq_len, d)
+        output: OutputTensor[rank=1],  # Output vector (d,)
+        q: InputTensor[rank=1],  # Query vector (d,)
+        k: InputTensor[rank=2],  # Key matrix (seq_len, d)
+        v: InputTensor[rank=2],  # Value matrix (seq_len, d)
         ctx: DeviceContextPtr,
     ) raises:
         # Define layouts
