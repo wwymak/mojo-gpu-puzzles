@@ -33,7 +33,7 @@ alias out_layout = Layout.row_major(1)
 fn traditional_dot_product_p10_style[
     in_layout: Layout, out_layout: Layout, size: Int
 ](
-    out: LayoutTensor[mut=True, dtype, out_layout],
+    output: LayoutTensor[mut=True, dtype, out_layout],
     a: LayoutTensor[mut=False, dtype, in_layout],
     b: LayoutTensor[mut=False, dtype, in_layout],
 ):
@@ -59,7 +59,7 @@ fn traditional_dot_product_p10_style[
         stride //= 2
 
     if local_i == 0:
-        out[0] = shared[0]
+        output[0] = shared[0]
 
 
 # ANCHOR_END: traditional_approach_from_p10
@@ -69,7 +69,7 @@ fn traditional_dot_product_p10_style[
 fn simple_warp_dot_product[
     in_layout: Layout, out_layout: Layout, size: Int
 ](
-    out: LayoutTensor[mut=True, dtype, out_layout],
+    output: LayoutTensor[mut=True, dtype, out_layout],
     a: LayoutTensor[mut=False, dtype, in_layout],
     b: LayoutTensor[mut=False, dtype, in_layout],
 ):
@@ -85,7 +85,7 @@ fn simple_warp_dot_product[
 
     # Only lane 0 writes the result (all lanes have the same total)
     if lane_id() == 0:
-        out[0] = total
+        output[0] = total
 
 
 # ANCHOR_END: simple_warp_kernel_solution
@@ -95,7 +95,9 @@ fn simple_warp_dot_product[
 fn functional_warp_dot_product[
     layout: Layout, dtype: DType, simd_width: Int, rank: Int, size: Int
 ](
-    out: LayoutTensor[mut=True, dtype, Layout.row_major(1), MutableAnyOrigin],
+    output: LayoutTensor[
+        mut=True, dtype, Layout.row_major(1), MutableAnyOrigin
+    ],
     a: LayoutTensor[mut=False, dtype, layout, MutableAnyOrigin],
     b: LayoutTensor[mut=False, dtype, layout, MutableAnyOrigin],
     ctx: DeviceContext,
@@ -121,7 +123,7 @@ fn functional_warp_dot_product[
 
         # Only lane 0 writes the result (all lanes have the same total)
         if lane_id() == 0:
-            out.store[1](0, 0, total)
+            output.store[1](0, 0, total)
 
     # Launch exactly WARP_SIZE threads (one warp) to process all elements
     elementwise[compute_dot_product, 1, target="gpu"](WARP_SIZE, ctx)
@@ -193,13 +195,13 @@ fn benchmark_functional_warp_parameterized[
         b_tensor = LayoutTensor[mut=False, dtype, test_layout](
             b_buf.unsafe_ptr()
         )
-        out_tensor = LayoutTensor[mut=True, dtype, Layout.row_major(1)](
+        output_tensor = LayoutTensor[mut=True, dtype, Layout.row_major(1)](
             out.unsafe_ptr()
         )
 
         functional_warp_dot_product[
             test_layout, dtype, SIMD_WIDTH, 1, test_size
-        ](out_tensor, a_tensor, b_tensor, ctx)
+        ](output_tensor, a_tensor, b_tensor, ctx)
         keep(out.unsafe_ptr())
         keep(a.unsafe_ptr())
         keep(b_buf.unsafe_ptr())

@@ -17,7 +17,7 @@ alias layout = Layout.row_major(SIZE, SIZE)
 fn naive_matmul[
     layout: Layout, size: Int
 ](
-    out: LayoutTensor[mut=False, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     a: LayoutTensor[mut=False, dtype, layout],
     b: LayoutTensor[mut=False, dtype, layout],
 ):
@@ -25,13 +25,13 @@ fn naive_matmul[
     col = block_dim.x * block_idx.x + thread_idx.x
 
     if row < size and col < size:
-        var acc: out.element_type = 0
+        var acc: output.element_type = 0
 
         @parameter
         for k in range(size):
             acc += a[row, k] * b[k, col]
 
-        out[row, col] = acc
+        output[row, col] = acc
 
 
 # ANCHOR_END: naive_matmul_solution
@@ -41,7 +41,7 @@ fn naive_matmul[
 fn single_block_matmul[
     layout: Layout, size: Int
 ](
-    out: LayoutTensor[mut=False, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     a: LayoutTensor[mut=False, dtype, layout],
     b: LayoutTensor[mut=False, dtype, layout],
 ):
@@ -60,13 +60,13 @@ fn single_block_matmul[
     barrier()
 
     if row < size and col < size:
-        var acc: out.element_type = 0
+        var acc: output.element_type = 0
 
         @parameter
         for k in range(size):
             acc += a_shared[local_row, k] * b_shared[k, local_col]
 
-        out[row, col] = acc
+        output[row, col] = acc
 
 
 # ANCHOR_END: single_block_matmul_solution
@@ -82,7 +82,7 @@ alias layout_tiled = Layout.row_major(SIZE_TILED, SIZE_TILED)
 fn matmul_tiled[
     layout: Layout, size: Int
 ](
-    out: LayoutTensor[mut=False, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     a: LayoutTensor[mut=False, dtype, layout],
     b: LayoutTensor[mut=False, dtype, layout],
 ):
@@ -94,7 +94,7 @@ fn matmul_tiled[
     a_shared = tb[dtype]().row_major[TPB, TPB]().shared().alloc()
     b_shared = tb[dtype]().row_major[TPB, TPB]().shared().alloc()
 
-    var acc: out.element_type = 0
+    var acc: output.element_type = 0
 
     # Iterate over tiles to compute matrix product
     @parameter
@@ -131,7 +131,7 @@ fn matmul_tiled[
 
     # Write out final result
     if tiled_row < size and tiled_col < size:
-        out[tiled_row, tiled_col] = acc
+        output[tiled_row, tiled_col] = acc
 
 
 # ANCHOR_END: matmul_tiled_solution
