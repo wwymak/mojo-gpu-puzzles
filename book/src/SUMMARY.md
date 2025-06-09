@@ -52,11 +52,19 @@
 - [🎯 Bonus Challenges](./bonuses/part3.md)
 
 # Part IV: 🔥 PyTorch Custom Ops Integration
-- [Puzzle 18: PyTorch Custom Op Basics]()
-- [Puzzle 19: Integration with torch.compile]()
+- [Puzzle 18: 1D Convolution Op](./puzzle_18/puzzle_18.md)
+- [Puzzle 19: Embedding Operations](./puzzle_19/puzzle_19.md)
+  - [🔰 Simple Embedding Kernel](./puzzle_19/simple_embedding_kernel.md)
+  - [⚡ Memory Access Patterns](./puzzle_19/coelased_memory_patterns.md)
+  - [📊 Performance Comparison](./puzzle_19/performance.md)
+
+- [Puzzle 20: Autograd Integration](./puzzle_20/puzzle_20.md)
+  - [🔄 Forward Pass Implementation](./puzzle_20/forward_pass.md)
+  - [📐 Backward Pass Implementation](./puzzle_20/backward_pass.md)
+  - [🧮 Custom Function Pattern](./puzzle_20/custom_function.md)
 
 # Part V: 🌊 Mojo Functional Patterns and Benchmarking
-- [Puzzle 20: GPU Functional Programming Patterns](./puzzle_20/puzzle_20.md)
+- [Puzzle 20: GPU Functional Programming Patterns]() # TODO
   - [elementwise - Basic GPU Functional Operations](./puzzle_20/elementwise.md)
   - [tile - Memory-Efficient Tiled Processing](./puzzle_20/tile.md)
   - [Vectorization - SIMD Control](./puzzle_20/vectorize.md)
