@@ -6,17 +6,17 @@ platforms = ["linux-64"]
 version = "0.0.0"
 
 [feature.cuda]
-system-requirements = { cuda = "12.0" }
+system-requirements = { cuda = "12" }
 
 [feature.cuda.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
+torch = { version = "==2.7.1", index = "https://download.pytorch.org/whl/cu128" }
 
 [feature.rocm]
 system-requirements = {}
 
 [feature.rocm.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/rocm6.2" }
-pytorch-triton-rocm = {version = "*", index = "https://download.pytorch.org/whl/rocm6.2" }
+torch = { version = "==2.7.1", index = "https://download.pytorch.org/whl/rocm6.3" }
+pytorch-triton-rocm = {version = "*", index = "https://download.pytorch.org/whl/rocm6.3" }
 
 [dependencies]
 python = ">=3.10,<3.13"
@@ -100,16 +100,13 @@ p16 = { cmd = "python problems/p16/p16.py", depends-on = ["p16-package"] }
 
 p17 = "mojo package problems/p17/op -o problems/p17/op.mojopkg && python problems/p17/p17.py"
 
-p18 = "python solutions/p18/p18.py"
+p18 = "python problems/p18/p18.py"
 
-p19 = "python solutions/p19/p19.py"
-
-p20 = "python solutions/p20/p20.mojo"
+p19 = "python problems/p19/p19.py"
 
 
-p30 = "mojo solutions/p20/p20.mojo"
+p21 = "mojo problems/p21/p21.mojo"
 
-p31 = "mojo problems/p21/p21.mojo"
-
+p22 = "mojo problems/p22/p22.mojo"
 
 all-animations = { cmd = "echo 'All animations generated!'", depends-on = ["viz01", "viz02", "viz03", "viz04", "viz05", "viz06", "viz07", "viz08", "viz09", "viz10", "viz11", "viz12", "viz13", "viz14", "rooflineviz"] }

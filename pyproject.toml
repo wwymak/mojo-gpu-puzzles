@@ -65,7 +65,11 @@ p17 = [
     { cmd = "python problems/p17/p17.py" }
 ]
 
+p18 = "mojo problems/p18/p18.mojo"
 
-p20 = "mojo problems/p20/p20.mojo"
+p19 = "mojo problems/p19/p19.mojo"
+
 
 p21 = "mojo problems/p21/p21.mojo"
+
+p22 = "mojo problems/p22/p22.mojo"

@@ -1,8 +1,10 @@
 from typing import Optional
 from pathlib import Path
 import numpy as np
+# ANCHOR: conv1d_pytorch
 import torch
 from max.torch import CustomOpLibrary
+
 
 def conv1d_pytorch(input_tensor: torch.Tensor, kernel_tensor: torch.Tensor) -> torch.Tensor:
     """
@@ -18,15 +20,15 @@ def conv1d_pytorch(input_tensor: torch.Tensor, kernel_tensor: torch.Tensor) -> t
     # Create output tensor with same shape as input
     output_tensor = torch.empty_like(input_tensor)
 
-    # ANCHOR: conv1d_pytorch_call
     # Call our custom conv1d operation with explicit output tensor
     # The Mojo signature expects: (out, input, kernel)
     conv1d = ops.conv1d[{"input_size": input_tensor.shape[0], "conv_size": kernel_tensor.shape[0]}]
-    torch.compile(conv1d)(output_tensor, input_tensor, kernel_tensor)
-    # ANCHOR_END: conv1d_pytorch_call
+
+    # FILL IN with 1 line of code
 
     return output_tensor
 
+# ANCHOR_END: conv1d_pytorch
 
 def conv1d_max_graph_reference(
     input_array: np.ndarray,

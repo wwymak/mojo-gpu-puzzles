@@ -53,7 +53,7 @@
 
 # Part IV: 🔥 PyTorch Custom Ops Integration
 - [Puzzle 18: 1D Convolution Op](./puzzle_18/puzzle_18.md)
-- [Puzzle 19: Embedding Operations](./puzzle_19/puzzle_19.md)
+- [Puzzle 19: Embedding Op](./puzzle_19/puzzle_19.md)
   - [🔰 Simple Embedding Kernel](./puzzle_19/simple_embedding_kernel.md)
   - [📊 Performance Comparison](./puzzle_19/performance.md)
 - [Puzzle 20: Autograd Integration](./puzzle_20/puzzle_20.md)
