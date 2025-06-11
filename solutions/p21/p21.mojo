@@ -10,7 +10,6 @@ from sys import simdwidthof, argv
 from testing import assert_equal
 from benchmark import Bench, BenchConfig, Bencher, BenchId, keep
 
-# ANCHOR: elementwise_add
 alias SIZE = 1024
 alias rank = 1
 alias layout = Layout.row_major(SIZE)
@@ -18,6 +17,7 @@ alias dtype = DType.float32
 alias SIMD_WIDTH = simdwidthof[dtype, target = _get_gpu_target()]()
 
 
+# ANCHOR: elementwise_add_solution
 fn elementwise_add[
     layout: Layout, dtype: DType, simd_width: Int, rank: Int, size: Int
 ](
@@ -32,16 +32,24 @@ fn elementwise_add[
         simd_width: Int, rank: Int
     ](indices: IndexList[rank]) capturing -> None:
         idx = indices[0]
-        print("idx:", idx)
-        # FILL IN (2 to 4 lines)
+        # Note: This is thread-local SIMD - each thread processes its own vector of data
+        # we'll later better see this hierarchy in Mojo:
+        # SIMD within threads, warp across threads, block across warps
+        a_simd = a.load[simd_width](idx, 0)
+        b_simd = b.load[simd_width](idx, 0)
+        ret = a_simd + b_simd
+        # print(
+        #     "idx:", idx, ", a_simd:", a_simd, ", b_simd:", b_simd, " sum:", ret
+        # )
+        output.store[simd_width](idx, 0, ret)
 
     elementwise[add, SIMD_WIDTH, target="gpu"](a.size(), ctx)
 
 
-# ANCHOR_END: elementwise_add
+# ANCHOR_END: elementwise_add_solution
 
 
-# ANCHOR: tiled_elementwise_add
+# ANCHOR: tiled_elementwise_add_solution
 alias TILE_SIZE = 32
 
 
@@ -64,21 +72,26 @@ fn tiled_elementwise_add[
         simd_width: Int, rank: Int
     ](indices: IndexList[rank]) capturing -> None:
         tile_id = indices[0]
-        print("tile_id:", tile_id)
-        out_tile = output.tile[tile_size](tile_id)
+
+        output_tile = output.tile[tile_size](tile_id)
         a_tile = a.tile[tile_size](tile_id)
         b_tile = b.tile[tile_size](tile_id)
 
-        # FILL IN (6 lines at most)
+        @parameter
+        for i in range(tile_size):
+            a_vec = a_tile.load[simd_width](i, 0)
+            b_vec = b_tile.load[simd_width](i, 0)
+            ret = a_vec + b_vec
+            output_tile.store[simd_width](i, 0, ret)
 
     num_tiles = (size + tile_size - 1) // tile_size
     elementwise[process_tiles, 1, target="gpu"](num_tiles, ctx)
 
 
-# ANCHOR_END: tiled_elementwise_add
+# ANCHOR_END: tiled_elementwise_add_solution
 
 
-# ANCHOR: manual_vectorized_tiled_elementwise_add
+# ANCHOR: manual_vectorized_tiled_elementwise_add_solution
 fn manual_vectorized_tiled_elementwise_add[
     layout: Layout,
     dtype: DType,
@@ -102,12 +115,21 @@ fn manual_vectorized_tiled_elementwise_add[
         num_threads_per_tile: Int, rank: Int
     ](indices: IndexList[rank]) capturing -> None:
         tile_id = indices[0]
-        print("tile_id:", tile_id)
-        out_tile = output.tile[chunk_size](tile_id)
+
+        output_tile = output.tile[chunk_size](tile_id)
         a_tile = a.tile[chunk_size](tile_id)
         b_tile = b.tile[chunk_size](tile_id)
 
-        # FILL IN (7 lines at most)
+        @parameter
+        for i in range(tile_size):
+            global_start = tile_id * chunk_size + i * simd_width
+
+            a_vec = a.load[simd_width](global_start, 0)
+            b_vec = b.load[simd_width](global_start, 0)
+            ret = a_vec + b_vec
+            # print("tile:", tile_id, "simd_group:", i, "global_start:", global_start, "a_vec:", a_vec, "b_vec:", b_vec, "result:", ret)
+
+            output.store[simd_width](global_start, 0, ret)
 
     # Number of tiles needed: each tile processes chunk_size elements
     num_tiles = (size + chunk_size - 1) // chunk_size
@@ -116,10 +138,10 @@ fn manual_vectorized_tiled_elementwise_add[
     ](num_tiles, ctx)
 
 
-# ANCHOR_END: manual_vectorized_tiled_elementwise_add
+# ANCHOR_END: manual_vectorized_tiled_elementwise_add_solution
 
 
-# ANCHOR: vectorize_within_tiles_elementwise_add
+# ANCHOR: vectorize_within_tiles_elementwise_add_solution
 fn vectorize_within_tiles_elementwise_add[
     layout: Layout,
     dtype: DType,
@@ -144,18 +166,18 @@ fn vectorize_within_tiles_elementwise_add[
         tile_start = tile_id * tile_size
         tile_end = min(tile_start + tile_size, size)
         actual_tile_size = tile_end - tile_start
-        print(
-            "tile_id:",
-            tile_id,
-            "tile_start:",
-            tile_start,
-            "tile_end:",
-            tile_end,
-            "actual_tile_size:",
-            actual_tile_size,
-        )
 
-        # FILL IN (9 lines at most)
+        @parameter
+        fn vectorized_add[width: Int](i: Int):
+            global_idx = tile_start + i
+            if global_idx + width <= size:
+                a_vec = a.load[width](global_idx, 0)
+                b_vec = b.load[width](global_idx, 0)
+                result = a_vec + b_vec
+                output.store[width](global_idx, 0, result)
+
+        # Use vectorize within each tile
+        vectorize[vectorized_add, simd_width](actual_tile_size)
 
     num_tiles = (size + tile_size - 1) // tile_size
     elementwise[
@@ -163,7 +185,7 @@ fn vectorize_within_tiles_elementwise_add[
     ](num_tiles, ctx)
 
 
-# ANCHOR_END: vectorize_within_tiles_elementwise_add
+# ANCHOR_END: vectorize_within_tiles_elementwise_add_solution
 
 
 @parameter
@@ -188,6 +210,7 @@ fn benchmark_elementwise_parameterized[
         b_tensor = LayoutTensor[mut=False, dtype, layout](b_buf.unsafe_ptr())
         out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
 
+        # 4. Actual computation being benchmarked
         elementwise_add[layout, dtype, SIMD_WIDTH, rank, test_size](
             out_tensor, a_tensor, b_tensor, ctx
         )
@@ -220,6 +243,7 @@ fn benchmark_tiled_parameterized[
         b_tensor = LayoutTensor[mut=False, dtype, layout](b_buf.unsafe_ptr())
         out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
 
+        # 4. Actual computation being benchmarked
         tiled_elementwise_add[
             layout, dtype, SIMD_WIDTH, rank, test_size, tile_size
         ](out_tensor, a_tensor, b_tensor, ctx)
@@ -252,6 +276,7 @@ fn benchmark_manual_vectorized_parameterized[
         b_tensor = LayoutTensor[mut=False, dtype, layout](b_buf.unsafe_ptr())
         out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
 
+        # 4. Actual computation being benchmarked
         manual_vectorized_tiled_elementwise_add[
             layout, dtype, SIMD_WIDTH, 1, rank, test_size, tile_size
         ](out_tensor, a_tensor, b_tensor, ctx)
@@ -284,6 +309,7 @@ fn benchmark_vectorized_parameterized[
         b_tensor = LayoutTensor[mut=False, dtype, layout](b_buf.unsafe_ptr())
         out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
 
+        # 4. Actual computation being benchmarked
         vectorize_within_tiles_elementwise_add[
             layout, dtype, SIMD_WIDTH, 1, rank, test_size, tile_size
         ](out_tensor, a_tensor, b_tensor, ctx)

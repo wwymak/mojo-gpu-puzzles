@@ -1,1 +1,0 @@
-# Warp lanes & SIMT execution
