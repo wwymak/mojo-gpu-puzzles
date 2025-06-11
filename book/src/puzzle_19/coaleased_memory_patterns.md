@@ -1,1 +1,0 @@
-# ⚡ Memory Access Patterns

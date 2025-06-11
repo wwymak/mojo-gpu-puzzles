@@ -6,10 +6,10 @@ from layout.tensor_builder import LayoutTensorBuild as tb
 from sys import sizeof, argv
 from testing import assert_equal
 
+# ANCHOR: embedding_kernel_coalesced
 alias THREADS_PER_BLOCK = 256
 
 
-# ANCHOR: embedding_kernel_coalesced_solution
 fn embedding_kernel_coalesced[
     indices_layout: Layout,
     weights_layout: Layout,
@@ -41,27 +41,19 @@ fn embedding_kernel_coalesced[
         return
 
     # Convert to (batch, seq, embed) coordinates
-    batch_idx = global_idx // (seq_len * embed_dim)
-    remaining = global_idx % (seq_len * embed_dim)
-    seq_idx = remaining // embed_dim
-    embed_idx = remaining % embed_dim
+    # FILL IN roughly 4 lines
 
     # Get token index
-    token_idx_val = Int(indices[batch_idx, seq_idx])
+    # FILL IN 1 line
 
     # Simple, correct assignment
-    if token_idx_val >= 0 and token_idx_val < vocab_size:
-        output[batch_idx, seq_idx, embed_idx] = weights[
-            token_idx_val, embed_idx
-        ]
-    else:
-        output[batch_idx, seq_idx, embed_idx] = 0
+    # FILL IN 4 lines
 
 
-# ANCHOR_END: embedding_kernel_coalesced_solution
+# ANCHOR_END: embedding_kernel_coalesced
 
 
-# ANCHOR: embedding_kernel_2d_solution
+# ANCHOR: embedding_kernel_2d
 fn embedding_kernel_2d[
     indices_layout: Layout,
     weights_layout: Layout,
@@ -88,32 +80,23 @@ fn embedding_kernel_2d[
     # 2D grid indexing
     batch_seq_idx = block_idx.x * block_dim.x + thread_idx.x
     embed_idx = block_idx.y * block_dim.y + thread_idx.y
-
     total_positions = batch_size * seq_len
 
-    # Bounds check
     if batch_seq_idx >= total_positions or embed_idx >= embed_dim:
         return
 
     # Convert to (batch, seq) coordinates
-    batch_idx = batch_seq_idx // seq_len
-    seq_idx = batch_seq_idx % seq_len
+    # FILL IN 2 lines
 
     # Get token index
-    token_idx_val = Int(indices[batch_idx, seq_idx])
+    # FILL IN 1 line
 
     # Assignment with 2D grid pattern
-    if token_idx_val >= 0 and token_idx_val < vocab_size:
-        output[batch_idx, seq_idx, embed_idx] = weights[
-            token_idx_val, embed_idx
-        ]
-    else:
-        output[batch_idx, seq_idx, embed_idx] = 0
+    # FILL IN 4 lines
 
 
-# ANCHOR_END: embedding_kernel_2d_solution
+# ANCHOR_END: embedding_kernel_2d
 
-# ANCHOR: embedding_custom_op_solution
 import compiler
 from runtime.asyncrt import DeviceContextPtr
 from tensor import InputTensor, OutputTensor
@@ -207,10 +190,6 @@ struct EmbeddingCustomOp:
             raise Error("Unsupported target: " + target)
 
 
-# ANCHOR_END: embedding_custom_op_solution
-
-
-# ANCHOR: embedding_2d_custom_op_solution
 @compiler.register("embedding_2d")
 struct Embedding2DCustomOp:
     @staticmethod
@@ -299,6 +278,3 @@ struct Embedding2DCustomOp:
                             ]
         else:
             raise Error("Unsupported target: " + target)
-
-
-# ANCHOR_END: embedding_2d_custom_op_solution
