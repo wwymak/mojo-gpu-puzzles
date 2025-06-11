@@ -7,8 +7,8 @@ run_mojo_files() {
   for f in *.mojo; do
     if [ -f "$f" ] && [ "$f" != "__init__.mojo" ]; then
       echo "=== Running ${path_prefix}$f ==="
-      # Extract flags for Mojo files
-      flags=$(grep -o 'argv()\[1\] == "--[^"]*"' "$f" | cut -d'"' -f2)
+      # Extract flags for Mojo files (skip demo flags)
+      flags=$(grep -o 'argv()\[1\] == "--[^"]*"' "$f" | cut -d'"' -f2 | grep -v '^--demo')
 
       # Get the directory of the file and change to it
       file_dir=$(dirname "$f")
@@ -36,8 +36,8 @@ run_python_files() {
   for f in *.py; do
     if [ -f "$f" ]; then
       echo "=== Running ${path_prefix}$f ==="
-      # Extract flags for Python files (sys.argv[1] pattern)
-      flags=$(grep -o 'sys\.argv\[1\] == "--[^"]*"' "$f" | cut -d'"' -f2)
+      # Extract flags for Python files (sys.argv[1] pattern, skip demo flags)
+      flags=$(grep -o 'sys\.argv\[1\] == "--[^"]*"' "$f" | cut -d'"' -f2 | grep -v '^--demo')
 
       # Get the directory of the file and change to it
       file_dir=$(dirname "$f")
