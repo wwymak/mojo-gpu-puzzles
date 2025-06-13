@@ -32,7 +32,7 @@ fn prefix_sum_simple[
 
     offset = 1
     for i in range(Int(log2(Scalar[dtype](TPB)))):
-        var current_val = shared[0]
+        current_val = shared[0]
         if local_i >= offset and local_i < size:
             current_val = shared[local_i - offset]  # read
 
