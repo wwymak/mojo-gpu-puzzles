@@ -56,9 +56,9 @@
 - [Puzzle 19: Embedding Op](./puzzle_19/puzzle_19.md)
   - [🔰 Coaleasced vs non-Coaleasced Kernel](./puzzle_19/simple_embedding_kernel.md)
   - [📊 Performance Comparison](./puzzle_19/performance.md)
-- [Puzzle 20: Autograd Integration](./puzzle_20/puzzle_20.md)
-  - [Forward Pass Implementation](./puzzle_20/forward_pass.md)
-  - [Backward Pass Implementation](./puzzle_20/backward_pass.md)
+- [Puzzle 20: Kernel Fusion and Custom Backward Pass](./puzzle_20/puzzle_20.md)
+  - [⚛️ Fused vs Unfused Kernels](./puzzle_20/forward_pass.md)
+  - [⛓️ Autograd Integration & Backward Pass](./puzzle_20/backward_pass.md)
 
 # Part V: 🌊 Mojo Functional Patterns and Benchmarking
 - [Puzzle 21: GPU Functional Programming Patterns](./puzzle_21/puzzle_21.md)
