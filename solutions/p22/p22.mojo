@@ -390,7 +390,7 @@ def main():
             print(bench)
             print("Benchmarks completed!")
             print()
-            print("🚀 WARP OPERATIONS PERFORMANCE ANALYSIS:")
+            print("WARP OPERATIONS PERFORMANCE ANALYSIS:")
             print(
                 "   GPU Architecture: NVIDIA (WARP_SIZE=32) vs AMD"
                 " (WARP_SIZE=64)"
@@ -434,23 +434,3 @@ def main():
             print("out:", out_host[0])
             print("expected:", expected[0])
             assert_equal(out_host[0], expected[0])
-
-        if len(argv()) == 1 or argv()[1] == "--kernel":
-            print()
-            print(
-                "🚀 Notice how simple the warp version is compared to p10.mojo!"
-            )
-            print(
-                "   Same kernel structure, but warp_sum() replaces all the"
-                " complexity!"
-            )
-        elif argv()[1] == "--functional":
-            print()
-            print(
-                "🔧 Functional approach shows modern Mojo style with warp"
-                " operations!"
-            )
-            print(
-                "   Clean, composable, and still leverages warp hardware"
-                " primitives!"
-            )
