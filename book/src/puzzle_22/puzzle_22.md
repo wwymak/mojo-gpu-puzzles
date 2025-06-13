@@ -47,16 +47,21 @@ Master the core warp primitives from `gpu.warp`:
 shared = tb[dtype]().row_major[WARP_SIZE]().shared().alloc()
 shared[local_i] = partial_product
 barrier()
-# Tree reduction with barriers...
+
+# Safe tree reduction would require read-write separation:
 stride = SIZE // 2
 while stride > 0:
+    var temp_val: Scalar[dtype] = 0
     if local_i < stride:
-        shared[local_i] += shared[local_i + stride]
+        temp_val = shared[local_i + stride]  # Read phase
+    barrier()
+    if local_i < stride:
+        shared[local_i] += temp_val  # Write phase
     barrier()
     stride //= 2
 
-# Can be replaced with the simple warp approach:
-total = sum(partial_product)
+# But warp operations eliminate all this complexity:
+total = sum(partial_product)  # No barriers, no race conditions!
 ```
 
 ### **When warp operations excel**
