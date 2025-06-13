@@ -191,11 +191,6 @@ def main():
                 block_dim=THREADS_PER_BLOCK_2,
             )
 
-            # Wait for all `blocks` to complete with using host `ctx.synchronize()`
-            # Note this is in contrast with using `barrier()` in the kernel
-            # which is a synchronization point for all threads in the same block and not across blocks.
-            ctx.synchronize()
-
             # Phase 2: Add block sums
             ctx.enqueue_function[prefix_sum_block_sum_phase[extended_layout]](
                 out_tensor,

@@ -297,14 +297,35 @@ After Phase 1, the output buffer contains:
 ```
 Note: The last block sum (???) is unpredictable since it's based on uninitialized memory, but this doesn't affect the final result.
 
-## Host-side synchronization: The critical step
+## Host-device synchronization: When it's actually needed
 
-Between phases 1 and 2, we call:
+The two kernel phases execute sequentially **without any explicit synchronization** between them:
+
 ```mojo
-ctx.synchronize()
+# Phase 1: Local prefix sums
+ctx.enqueue_function[prefix_sum_local_phase[...]](...)
+
+# Phase 2: Add block sums (automatically waits for Phase 1)
+ctx.enqueue_function[prefix_sum_block_sum_phase[...]](...)
 ```
 
-This is the most crucial part of the algorithm! Without this synchronization, the second kernel might start before the first one completes, leading to race conditions and incorrect results. This is a fundamental difference from single-block algorithms where `barrier()` would be sufficient.
+**Key insight**: Mojo's `DeviceContext` uses a single execution stream (CUDA stream on NVIDIA GPUs, HIP stream on AMD ROCm GPUs), which guarantees that kernel launches execute in the exact order they are enqueued. No explicit synchronization is needed between kernels.
+
+**When `ctx.synchronize()` is needed**:
+
+```mojo
+# After both kernels complete, before reading results on host
+ctx.synchronize()  # Host waits for GPU to finish
+
+with out.map_to_host() as out_host:  # Now safe to read GPU results
+    print("out:", out_host)
+```
+
+The `ctx.synchronize()` call serves its traditional purpose:
+- **Host-device synchronization**: Ensures the host waits for all GPU work to complete before accessing results
+- **Memory safety**: Prevents reading GPU memory before computations finish
+
+**Execution model**: Unlike `barrier()` which synchronizes threads within a block, kernel ordering comes from Mojo's single-stream execution model, while `ctx.synchronize()` handles host-device coordination.
 
 ## Phase 2 kernel: Block sum addition
 
