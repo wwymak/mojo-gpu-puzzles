@@ -24,7 +24,7 @@ fn prefix_sum_simple[
 ):
     global_i = block_dim.x * block_idx.x + thread_idx.x
     local_i = thread_idx.x
-    # FILL ME IN (roughly 12 lines)
+    # FILL ME IN (roughly 18 lines)
 
 
 # ANCHOR_END: prefix_sum_simple
@@ -48,7 +48,7 @@ fn prefix_sum_local_phase[
 ):
     global_i = block_dim.x * block_idx.x + thread_idx.x
     local_i = thread_idx.x
-    # FILL ME IN (roughly 14 lines)
+    # FILL ME IN (roughly 20 lines)
 
 
 # Kernel 2: Add block sums to their respective blocks

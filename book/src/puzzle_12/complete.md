@@ -163,6 +163,15 @@ The size of this extended buffer is: `EXTENDED_SIZE = SIZE_2 + num_blocks = 15 +
 
 ## Phase 1 kernel: Local prefix sums
 
+### Race Condition Prevention in Local Phase
+
+The local phase uses the same explicit synchronization pattern as the simple version to prevent read-write hazards:
+- **Read Phase**: All threads first read the values they need into a local variable `current_val`
+- **Synchronization**: `barrier()` ensures all reads complete before any writes begin
+- **Write Phase**: All threads then safely write their computed values back to shared memory
+
+This prevents race conditions that could occur when multiple threads simultaneously access the same shared memory locations during the parallel reduction.
+
 ### Step-by-step execution for Block 0
 
 1. **Load values into shared memory**:
@@ -173,6 +182,18 @@ The size of this extended buffer is: `EXTENDED_SIZE = SIZE_2 + num_blocks = 15 +
 2. **Iterations of parallel reduction** (\\(\log_2(TPB) = 3\\) iterations):
 
    **Iteration 1** (offset=1):
+
+   **Read Phase**: Each active thread reads the value it needs:
+   ```
+   T₁ reads shared[0] = 0    T₅ reads shared[4] = 4
+   T₂ reads shared[1] = 1    T₆ reads shared[5] = 5
+   T₃ reads shared[2] = 2    T₇ reads shared[6] = 6
+   T₄ reads shared[3] = 3
+   ```
+
+   **Synchronization**: `barrier()` ensures all reads complete
+
+   **Write Phase**: Each thread adds its read value:
    ```
    shared[0] = 0              (unchanged)
    shared[1] = 1 + 0 = 1
@@ -186,6 +207,17 @@ The size of this extended buffer is: `EXTENDED_SIZE = SIZE_2 + num_blocks = 15 +
    After barrier: `shared = [0, 1, 3, 5, 7, 9, 11, 13]`
 
    **Iteration 2** (offset=2):
+
+   **Read Phase**: Each active thread reads the value it needs:
+   ```
+   T₂ reads shared[0] = 0    T₅ reads shared[3] = 5
+   T₃ reads shared[1] = 1    T₆ reads shared[4] = 7
+   T₄ reads shared[2] = 3    T₇ reads shared[5] = 9
+   ```
+
+   **Synchronization**: `barrier()` ensures all reads complete
+
+   **Write Phase**: Each thread adds its read value:
    ```
    shared[0] = 0              (unchanged)
    shared[1] = 1              (unchanged)
@@ -199,6 +231,16 @@ The size of this extended buffer is: `EXTENDED_SIZE = SIZE_2 + num_blocks = 15 +
    After barrier: `shared = [0, 1, 3, 6, 10, 14, 18, 22]`
 
    **Iteration 3** (offset=4):
+
+   **Read Phase**: Each active thread reads the value it needs:
+   ```
+   T₄ reads shared[0] = 0    T₆ reads shared[2] = 3
+   T₅ reads shared[1] = 1    T₇ reads shared[3] = 6
+   ```
+
+   **Synchronization**: `barrier()` ensures all reads complete
+
+   **Write Phase**: Each thread adds its read value:
    ```
    shared[0] = 0              (unchanged)
    shared[1] = 1              (unchanged)
@@ -278,6 +320,21 @@ This is the most crucial part of the algorithm! Without this synchronization, th
    ```
 
 ## Performance and optimization considerations
+
+### Key implementation details
+
+**Local phase synchronization pattern**: Each iteration within a block follows a strict read → sync → write pattern:
+1. `var current_val = shared[0]` - Initialize local variable
+2. `current_val = shared[local_i - offset]` - Read phase (if conditions met)
+3. `barrier()` - Explicit synchronization to prevent race conditions
+4. `shared[local_i] += current_val` - Write phase (if conditions met)
+5. `barrier()` - Standard synchronization before next iteration
+
+**Cross-block synchronization**: The algorithm uses two levels of synchronization:
+- **Intra-block**: `barrier()` synchronizes threads within each block during local prefix sum computation
+- **Inter-block**: `ctx.synchronize()` synchronizes between kernel launches to ensure Phase 1 completes before Phase 2 begins
+
+**Race condition prevention**: The explicit read-write separation in the local phase prevents the race condition that would occur if threads simultaneously read from and write to the same shared memory locations during parallel reduction.
 
 1. **Work efficiency**: This implementation has \\(O(n \log n)\\) work complexity, while the sequential algorithm is \\(O(n)\\). This is a classic space-time tradeoff in parallel algorithms.
 

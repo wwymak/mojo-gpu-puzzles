@@ -32,8 +32,13 @@ fn prefix_sum_simple[
 
     offset = 1
     for i in range(Int(log2(Scalar[dtype](TPB)))):
+        var current_val = shared[0]
         if local_i >= offset and local_i < size:
-            shared[local_i] += shared[local_i - offset]
+            current_val = shared[local_i - offset]  # read
+
+        barrier()
+        if local_i >= offset and local_i < size:
+            shared[local_i] += current_val
 
         barrier()
         offset *= 2
@@ -87,8 +92,14 @@ fn prefix_sum_local_phase[
     # Block 1 follows same pattern to get [8,17,27,38,50,63,77,...]
     offset = 1
     for i in range(Int(log2(Scalar[dtype](TPB)))):
+        var current_val = shared[0]
         if local_i >= offset and local_i < TPB:
-            shared[local_i] += shared[local_i - offset]
+            current_val = shared[local_i - offset]  # read
+
+        barrier()
+        if local_i >= offset and local_i < TPB:
+            shared[local_i] += current_val  # write
+
         barrier()
         offset *= 2
 
