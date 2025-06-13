@@ -75,7 +75,9 @@ fn prefix_sum_local_phase[
     # Load data into shared memory
     # Example with SIZE_2=15, TPB=8, BLOCKS=2:
     # Block 0 shared mem: [0,1,2,3,4,5,6,7]
-    # Block 1 shared mem: [8,9,10,11,12,13,14,0]  (last value padded with 0)
+    # Block 1 shared mem: [8,9,10,11,12,13,14,uninitialized]
+    # Note: The last position remains uninitialized since global_i >= size,
+    # but this is safe because that thread doesn't participate in computation
     if global_i < size:
         shared[local_i] = a[global_i]
 

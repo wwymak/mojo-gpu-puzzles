@@ -149,7 +149,7 @@ For our test case with `SIZE_2 = 15` and `TPB = 8`:
 Input array:  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 Block 0 processes: [0, 1, 2, 3, 4, 5, 6, 7]
-Block 1 processes: [8, 9, 10, 11, 12, 13, 14, (padding)]
+Block 1 processes: [8, 9, 10, 11, 12, 13, 14] (7 valid elements)
 ```
 
 We extend the output buffer to include space for block sums:
@@ -267,32 +267,35 @@ This prevents race conditions that could occur when multiple threads simultaneou
 
 1. **Load values into shared memory**:
    ```
-   shared = [8, 9, 10, 11, 12, 13, 14, 0] // Last value padded with 0
+   shared = [8, 9, 10, 11, 12, 13, 14, uninitialized]
    ```
+   Note: Thread 7 doesn't load anything since `global_i = 15 >= SIZE_2`, leaving `shared[7]` uninitialized. This is safe because Thread 7 won't participate in the final output.
 
 2. **Iterations of parallel reduction** (\\(\log_2(TPB) = 3\\) iterations):
 
-   With similar iterations as Block 0, after all three iterations:
+   Only the first 7 threads participate in meaningful computation. After all three iterations:
    ```
-   shared = [8, 17, 27, 38, 50, 63, 77, 77]
+   shared = [8, 17, 27, 38, 50, 63, 77, uninitialized]
    ```
 
 3. **Write local results back to global memory**:
    ```
-   output[8...14] = [8, 17, 27, 38, 50, 63, 77]
+   output[8...14] = [8, 17, 27, 38, 50, 63, 77]  // Only 7 valid outputs
    ```
 
-4. **Store block sum in auxiliary space** (only last thread):
+4. **Store block sum in auxiliary space** (only last thread in block):
    ```
-   output[16] = 77  // at position size + block_idx.x = 15 + 1
+   output[16] = shared[7]  // Thread 7 (TPB-1) stores whatever is in shared[7]
    ```
+   Note: Even though Thread 7 doesn't load valid input data, it still participates in the prefix sum computation within the block. The `shared[7]` position gets updated during the parallel reduction iterations, but since it started uninitialized, the final value is unpredictable. However, this doesn't affect correctness because Block 1 is the last block, so this block sum is never used in Phase 2.
 
 After Phase 1, the output buffer contains:
 ```
-[0, 1, 3, 6, 10, 15, 21, 28, 8, 17, 27, 38, 50, 63, 77, 28, 77]
+[0, 1, 3, 6, 10, 15, 21, 28, 8, 17, 27, 38, 50, 63, 77, 28, ???]
                                                         ^   ^
                                                 Block sums stored here
 ```
+Note: The last block sum (???) is unpredictable since it's based on uninitialized memory, but this doesn't affect the final result.
 
 ## Host-side synchronization: The critical step
 
