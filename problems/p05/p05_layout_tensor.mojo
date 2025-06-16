@@ -25,6 +25,9 @@ fn broadcast_add[
 ):
     row = thread_idx.y
     col = thread_idx.x
+
+    if row < size and col < size: 
+        output[row, col] = a[0, col] + b[row, 0]
     # FILL ME IN (roughly 2 lines)
 
 
@@ -74,6 +77,7 @@ def main():
             print("expected:", expected_buf)
             for i in range(SIZE):
                 for j in range(SIZE):
+                    print(out_buf_host[i * SIZE + j])
                     assert_equal(
                         out_buf_host[i * SIZE + j], expected_buf[i * SIZE + j]
                     )
