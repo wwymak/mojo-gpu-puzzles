@@ -73,14 +73,12 @@
   - [🧠 Warp lanes & SIMT execution](./puzzle_22/warp_simt.md)
   - [warp.sum() Essentials](./puzzle_22/warp_sum.md)
   - [📊 When to Use Warp Programming](./puzzle_22/warp_extra.md)
-- [Puzzle 23: Essential Warp Operations]()
-  - [warp.shuffle_down() Communication]()
-  - [warp.shuffle_xor() Butterfly Patterns]()
-  - [warp.broadcast() Distribution]()
+- [Puzzle 23: Warp Communication](./puzzle_23/puzzle_23.md)
+  - [warp.shuffle_down()](./puzzle_23/warp_shuffle_down.md)
+  - [warp.broadcast()](./puzzle_23/warp_broadcast.md)
 - [Puzzle 24: Advanced Warp Patterns]()
+  - [warp.shuffle_xor() Butterfly Networks]()
   - [warp.prefix_sum() Scan Operations]()
-  - [lane_group_* Sub-warp Operations]()
-  - [Combining with Functional Patterns]()
 
 # Part VII: 🧠 Advanced Memory Operations
 - [Puzzle 25: Memory Coalescing]()
