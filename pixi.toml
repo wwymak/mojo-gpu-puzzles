@@ -40,6 +40,10 @@ install-pre-commit = "pre-commit install"
 format = { cmd="mojo format problems solutions", depends-on = ["install-pre-commit"] }
 
 tests = { cmd = "bash solutions/run.sh" }
+memcheck = { cmd = "bash solutions/sanitizer.sh memcheck" }
+racecheck = { cmd = "bash solutions/sanitizer.sh racecheck" }
+synccheck = { cmd = "bash solutions/sanitizer.sh synccheck" }
+initcheck = { cmd = "bash solutions/sanitizer.sh initcheck" }
 
 build-book = "cd book && mdbook build"
 book = { cmd = "cd book && mdbook serve --open", depends-on = ["build-book"] }
