@@ -932,7 +932,6 @@ def main():
         print("  python p20.py --backward       # Test backward pass")
         print("  python p20.py --demo           # Neural network demo")
         print("  python p20.py --demo-simple    # Single operation demo (fastest)")
-        exit(1)
 
 if __name__ == "__main__":
     main()
