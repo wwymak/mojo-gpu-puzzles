@@ -71,16 +71,16 @@
 # Part VI: ⚡ Warp-Level Programming
 - [Puzzle 22: Warp Fundamentals](./puzzle_22/puzzle_22.md)
   - [🧠 Warp lanes & SIMT execution](./puzzle_22/warp_simt.md)
-  - [warp.sum() Essentials](./puzzle_22/warp_sum.md)
+  - [🔰 warp.sum() Essentials](./puzzle_22/warp_sum.md)
   - [📊 When to Use Warp Programming](./puzzle_22/warp_extra.md)
 - [Puzzle 23: Warp Communication](./puzzle_23/puzzle_23.md)
-  - [warp.shuffle_down()](./puzzle_23/warp_shuffle_down.md)
-  - [warp.broadcast()](./puzzle_23/warp_broadcast.md)
-- [Puzzle 24: Advanced Warp Patterns]()
-  - [warp.shuffle_xor() Butterfly Networks]()
-  - [warp.prefix_sum() Scan Operations]()
+  - [⬇️ warp.shuffle_down()](./puzzle_23/warp_shuffle_down.md)
+  - [📢 warp.broadcast()](./puzzle_23/warp_broadcast.md)
+- [Puzzle 24: Advanced Warp Patterns](./puzzle_24/puzzle_24.md)
+  - [🦋 warp.shuffle_xor() Butterfly Networks](./puzzle_24/warp_shuffle_xor.md)
+  - [🔢 warp.prefix_sum() Scan Operations](./puzzle_24/warp_prefix_sum.md)
 
-# Part VII: 🧠 Advanced Memory Operations
+# Part VII: Advanced Memory Operations
 - [Puzzle 25: Memory Coalescing]()
   - [📚 Understanding Coalesced Access]()
   - [Optimized Access Patterns]()
