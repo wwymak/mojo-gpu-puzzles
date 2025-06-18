@@ -127,7 +127,7 @@ LayerNorm performs several crucial functions in deep neural networks:
 The unfused approach executes operations separately using multiple kernels. Here are some of the kernels we wrote in the previous chapters:
 
 #### Matrix multiplication kernel
-From [Puzzle 14](../puzzle_14/puzzle_14.md), we reuse the tiled matrix multiplication kernel for the linear transformation:
+From [Puzzle 14](../puzzle_14/puzzle_14.md), we reuse the tiled matrix multiplication kernel for the linear transformation. This kernel includes bounds checking to handle variable matrix dimensions safely:
 
 ```mojo
 {{#include ../../../problems/p20/op/layernorm_linear.mojo:matmul_idiomatic_tiled}}

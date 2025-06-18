@@ -150,6 +150,8 @@ fn matmul_idiomatic_tiled[
 ):
     local_row = thread_idx.y
     local_col = thread_idx.x
+    tiled_row = block_idx.y * TPB + local_row
+    tiled_col = block_idx.x * TPB + local_col
 
     # Get the tile of the output matrix that this thread block is responsible for
     out_tile = output.tile[TPB, TPB](block_idx.y, block_idx.x)
@@ -183,7 +185,8 @@ fn matmul_idiomatic_tiled[
         barrier()
 
     # Write final result to output tile
-    out_tile[local_row, local_col] = acc
+    if tiled_row < size and tiled_col < size:
+        out_tile[local_row, local_col] = acc
 
 
 # ANCHOR_END: matmul_idiomatic_tiled_solution

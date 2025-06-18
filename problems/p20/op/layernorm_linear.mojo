@@ -31,6 +31,8 @@ fn matmul_idiomatic_tiled[
     """Idiomatic tiled matmul following p14.mojo exactly."""
     local_row = thread_idx.x
     local_col = thread_idx.y
+    tiled_row = block_idx.y * TPB + local_row
+    tiled_col = block_idx.x * TPB + local_col
 
     # Get the tile of the output matrix that this thread block is responsible for
     out_tile = output.tile[TPB, TPB](block_idx.x, block_idx.y)
@@ -63,10 +65,7 @@ fn matmul_idiomatic_tiled[
         barrier()
 
     # Write final result with bounds checking (needed for variable matrix sizes)
-    if (
-        block_idx.x * TPB + local_row < rows
-        and block_idx.y * TPB + local_col < cols
-    ):
+    if tiled_row < rows and tiled_col < cols:
         out_tile[local_row, local_col] = acc
 
 
