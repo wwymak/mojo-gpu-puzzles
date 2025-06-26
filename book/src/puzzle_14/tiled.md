@@ -41,7 +41,6 @@ Each block processes a tile using LayoutTensor indexing
 1. Calculate global and local indices for thread position
 2. Allocate shared memory for A and B tiles
 3. For each tile:
-   - Reset shared memory
    - Load tile from matrix A and B
    - Compute partial products
    - Accumulate results in registers
@@ -235,26 +234,24 @@ The tiled matrix multiplication implementation demonstrates efficient handling o
    For k in range(TPB):  # No need for min() - all tiles are full!
        acc += a_shared[local_row, k] * b_shared[k, local_col]
    ```
-   - Maximizes memory coalescing:
+   - Avoids shared memory bank conflicts:
      ```txt
-     Coalesced Access (Good):          Non-Coalesced Access (Bad):
-     Thread0: [M0][M1][M2][M3]         Thread0: [M0][ ][ ][ ]
-     Thread1: [M4][M5][M6][M7]    vs   Thread1: [ ][M1][ ][ ]
-     Thread2: [M8][M9][MA][MB]         Thread2: [ ][ ][M2][ ]
-     Thread3: [MC][MD][ME][MF]         Thread3: [ ][ ][ ][M3]
-     ↓                                 ↓
-     1 memory transaction              4 memory transactions
+     Bank Conflict Free (Good):        Bank Conflicts (Bad):
+     Thread0: a_shared[0,k] b_shared[k,0]  Thread0: a_shared[0,0] b_shared[0,0]
+     Thread1: a_shared[1,k] b_shared[k,1]  Thread1: a_shared[0,1] b_shared[0,1]
+     Thread2: a_shared[2,k] b_shared[k,2]  Thread2: a_shared[0,2] b_shared[0,2]
+     ↓                                     ↓
+     Parallel access to different banks    Serialized access to same bank
      ```
-     When threads access consecutive memory locations (left), the GPU can combine multiple reads into a single transaction.
-     When threads access scattered locations (right), each access requires a separate transaction, reducing performance.
+     When threads access different rows/banks of shared memory (left), accesses can proceed in parallel.
+     When threads access the same bank simultaneously (right), accesses are serialized, reducing performance.
 
 
 6. **Synchronization points**
    ```txt
    barrier() after:
-   1. Shared memory reset
-   2. Tile loading
-   3. Tile computation
+   1. Tile loading
+   2. Tile computation
    ```
 
 Key performance features:
@@ -322,9 +319,10 @@ The idiomatic tiled matrix multiplication leverages Mojo's LayoutTensor API and 
    async_copy_wait_all()
    ```
    These operations:
-   - Launch asynchronous memory transfers that may overlap with computation via [copy_dram_to_sram_async](https://docs.modular.com/mojo/kernels/layout/layout_tensor/copy_dram_to_sram_async/)
+   - Use dedicated copy engines that bypass registers and enable compute-memory overlap via [copy_dram_to_sram_async](https://docs.modular.com/mojo/kernels/layout/layout_tensor/copy_dram_to_sram_async/)
    - Use specialized thread layouts for optimal memory access patterns
    - Eliminate the need for manual memory initialization
+   - Note: Standard GPU loads are already asynchronous; these provide better resource utilization
 
 3. **Specialized compile-time load layouts**
    ```mojo
@@ -367,7 +365,7 @@ This implementation shows how high-level abstractions can express complex GPU al
 | Feature | Manual Tiling | Idiomatic Tiling |
 |---------|--------------|------------------|
 | Memory access | Direct indexing with bounds checks | LayoutTensor tile API |
-| Tile loading | Explicit element-by-element copying | Asynchronous bulk transfers |
+| Tile loading | Explicit element-by-element copying | Dedicated copy engine bulk transfers |
 | Shared memory | Manual initialization (zeroing) | Managed by copy functions |
 | Code complexity | More verbose with explicit indexing | More concise with higher-level APIs |
 | Bounds checking | Multiple checks during loading and computing | Single defensive check at final write |
