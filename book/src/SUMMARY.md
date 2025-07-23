@@ -80,29 +80,32 @@
   - [🦋 warp.shuffle_xor() Butterfly Networks](./puzzle_24/warp_shuffle_xor.md)
   - [🔢 warp.prefix_sum() Scan Operations](./puzzle_24/warp_prefix_sum.md)
 
-# Part VII: Advanced Memory Operations
-- [Puzzle 25: Memory Coalescing]()
-  - [📚 Understanding Coalesced Access]()
-  - [Optimized Access Patterns]()
-  - [🔧 Troubleshooting Memory Issues]()
-- [Puzzle 26: Async Memory Operations]()
-- [Puzzle 27: Memory Fences & Atomics]()
-- [Puzzle 28: Prefetching & Caching]()
+# Part VII: Advanced Memory Systems
+- [Puzzle 25: Async Memory Operations & Copy Overlap](./puzzle_25/puzzle_25.md)
+- [Puzzle 26: GPU Synchronization Primitives]()
+  - [🔄 Block Barriers & Thread Synchronization]()
+  - [🔒 Device-Wide Semaphores]()
+  - [🛡️ Memory Fences & Consistency Models]()
+- [Puzzle 27: Advanced Memory Optimization]()
+  - [💾 Cache Control & Memory Policies]()
+  - [🛡️ Advanced Memory Fences & Ordering]()
+  - [⚡ Essential TMA Operations (H100+)]()
+  - [🔬 Memory Access Pattern Optimization]()
 
 # Part VIII: 📊 Performance Analysis & Optimization
-- [Puzzle 29: GPU Profiling Basics]()
-- [Puzzle 30: Occupancy Optimization]()
-- [Puzzle 31: Bank Conflicts]()
+- [Puzzle 28: GPU Profiling Basics]()
+- [Puzzle 29: Occupancy Optimization]()
+- [Puzzle 30: Bank Conflicts]()
   - [📚 Understanding Shared Memory Banks]()
   - [Conflict-Free Patterns]()
 
 # Part IX: 🚀 Advanced GPU Features
-- [Puzzle 32: Tensor Core Operations]()
-- [Puzzle 33: Random Number Generation]()
-- [Puzzle 34: Advanced Synchronization]()
+- [Puzzle 31: Tensor Core Operations]()
+- [Puzzle 32: Random Number Generation]()
+- [Puzzle 33: Advanced Synchronization]()
 
 # Part X: 🌐 Multi-GPU & Advanced Applications
-- [Puzzle 35: Multi-Stream Programming]()
-- [Puzzle 36: Multi-GPU Basics]()
-- [Puzzle 37: End-to-End Optimization Case Study]()
+- [Puzzle 34: Multi-Stream Programming]()
+- [Puzzle 35: Multi-GPU Basics]()
+- [Puzzle 36: End-to-End Optimization Case Study]()
 - [🎯 Advanced Bonus Challenges]()

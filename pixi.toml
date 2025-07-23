@@ -31,8 +31,8 @@ mdbook = ">=0.4.48,<0.5"
 pre-commit = ">=4.2.0,<5"
 
 [environments]
-cuda = { features = ["cuda"] }
-rocm = { features = ["rocm"] }
+cuda = { features = ["cuda"], solve-group = "cuda" }
+rocm = { features = ["rocm"], solve-group = "rocm" }
 default = { features = ["cuda"] }
 
 [tasks]
@@ -44,6 +44,7 @@ memcheck = { cmd = "bash solutions/sanitizer.sh memcheck" }
 racecheck = { cmd = "bash solutions/sanitizer.sh racecheck" }
 synccheck = { cmd = "bash solutions/sanitizer.sh synccheck" }
 initcheck = { cmd = "bash solutions/sanitizer.sh initcheck" }
+sanitizers = { cmd = "bash solutions/sanitizer.sh all" }
 
 build-book = "cd book && mdbook build"
 book = { cmd = "cd book && mdbook serve --open", depends-on = ["build-book"] }
@@ -121,5 +122,7 @@ p22 = "mojo problems/p22/p22.mojo"
 p23 = "mojo problems/p23/p23.mojo"
 
 p24 = "mojo problems/p24/p24.mojo"
+
+p25 = "mojo problems/p25/p25.mojo"
 
 all-animations = { cmd = "echo 'All animations generated!'", depends-on = ["viz01", "viz02", "viz03", "viz04", "viz05", "viz06", "viz07", "viz08", "viz09", "viz10", "viz11", "viz12", "viz13", "viz14", "rooflineviz"] }

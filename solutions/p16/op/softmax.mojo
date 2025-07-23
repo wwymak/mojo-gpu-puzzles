@@ -31,7 +31,7 @@ fn softmax_gpu_kernel[
     # Initialize out-of-bounds (shared_max[local_i], global_i >= input_size) shared memory addresses to the minimum
     # finite value for dtype, ensuring that if these elements are accessed in the parallel max reduction below they
     # do not influence the result (max(min_finite, x) == x for any x).
-    var thread_max: Scalar[dtype] = min_finite[dtype]() 
+    var thread_max: Scalar[dtype] = min_finite[dtype]()
     if global_i < input_size:
         thread_max = rebind[Scalar[dtype]](input[global_i])
     shared_max[local_i] = thread_max
@@ -42,7 +42,9 @@ fn softmax_gpu_kernel[
     stride = TPB // 2
     while stride > 0:
         if local_i < stride:
-            shared_max[local_i] = max(shared_max[local_i], shared_max[local_i + stride])
+            shared_max[local_i] = max(
+                shared_max[local_i], shared_max[local_i + stride]
+            )
         barrier()
         stride = stride // 2
 
