@@ -101,6 +101,10 @@ No prior GPU programming experience is necessary! We'll build that knowledge thr
 
 Let's begin our journey into the exciting world of GPU computing with Mojo 🔥!
 
+### Development
+
+Please see details in the [README](https://github.com/modular/mojo-gpu-puzzles#development).
+
 ## Join the community
 
 <p align="center" style="display: flex; justify-content: center; gap: 10px;">
