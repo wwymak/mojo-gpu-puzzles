@@ -44,7 +44,7 @@
 
 Welcome to **Mojo🔥 GPU Puzzles** — an interactive approach to learning GPU programming through hands-on puzzle solving. Instead of traditional textbook learning, you'll immediately dive into writing real GPU code and seeing the results.
 
-Start Learning Now 👉 [https://builds.modular.com/puzzles](https://builds.modular.com/puzzles)
+Start Learning Now 👉 [puzzles.modular.com](https://puzzles.modular.com/)
 
 > 📬 [Subscribe to updates](https://www.modular.com/company/talk-to-us) to get notified when new puzzles are released!
 
@@ -121,10 +121,12 @@ pixi run tests pXX
 pixi run mojo/python solutions/pXX/pXX.{mojo,py}
 
 # Run GPU sanitizers for debugging on NVIDIA GPUs using `compute-sanitizer`
-pixi run memcheck     # Detect memory errors
-pixi run racecheck    # Detect race conditions
-pixi run synccheck    # Detect synchronization errors
-pixi run initcheck    # Detect uninitialized memory access
+pixi run memcheck  <optional pXX>    # Detect memory errors
+pixi run racecheck <optional pXX>    # Detect race conditions
+pixi run synccheck <optional pXX>    # Detect synchronization errors
+pixi run initcheck <optional pXX>    # Detect uninitialized memory access
+# Or run all sanitizer tools
+pixi run sanitizers pXX
 # Or manually
 # Note: ignore the mojo runtime error collision with the sanitizer. Look for `Error SUMMARY`
 pixi run compute-sanitizer --tool {memcheck,racecheck,synccheck,initcheck} mojo solutions/pXX/pXX.mojo
