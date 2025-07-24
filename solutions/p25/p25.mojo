@@ -13,10 +13,13 @@ alias CONV_TILE_SIZE = 256
 alias KERNEL_SIZE = 5
 alias HALO_SIZE = KERNEL_SIZE // 2  # Halo elements needed for boundary
 alias BUFFER_SIZE = CONV_TILE_SIZE + 2 * HALO_SIZE  # Include halo for boundary conditions
-alias BLOCKS_PER_GRID_ASYNC = (VECTOR_SIZE + CONV_TILE_SIZE - 1) // CONV_TILE_SIZE
+alias BLOCKS_PER_GRID_ASYNC = (
+    VECTOR_SIZE + CONV_TILE_SIZE - 1
+) // CONV_TILE_SIZE
 alias THREADS_PER_BLOCK_ASYNC = 256
 alias dtype = DType.float32
 alias layout_async = Layout.row_major(VECTOR_SIZE)
+
 
 # ANCHOR: async_copy_overlap_convolution_solution
 fn async_copy_overlap_convolution[
@@ -38,8 +41,8 @@ fn async_copy_overlap_convolution[
 
     local_i = thread_idx.x
 
-    # Phase 1: Always use async copy - hardware handles bounds automatically
-    # Create tile for all blocks - hardware will zero-pad out-of-bounds access
+    # Phase 1: Launch async copy for input tile
+    # Note: tile() does NOT perform bounds checking - ensure valid tile bounds
     input_tile = input.tile[CONV_TILE_SIZE](block_idx.x)
 
     # Use async copy with thread layout matching p14 pattern
@@ -79,11 +82,15 @@ fn async_copy_overlap_convolution[
 def test_async_copy_overlap_convolution():
     """Test async copy overlap with 1D convolution."""
     with DeviceContext() as ctx:
-        input_buf = ctx.enqueue_create_buffer[dtype](
-            VECTOR_SIZE
-        ).enqueue_fill(0)
-        output_buf = ctx.enqueue_create_buffer[dtype](VECTOR_SIZE).enqueue_fill(0)
-        kernel_buf = ctx.enqueue_create_buffer[dtype](KERNEL_SIZE).enqueue_fill(0)
+        input_buf = ctx.enqueue_create_buffer[dtype](VECTOR_SIZE).enqueue_fill(
+            0
+        )
+        output_buf = ctx.enqueue_create_buffer[dtype](VECTOR_SIZE).enqueue_fill(
+            0
+        )
+        kernel_buf = ctx.enqueue_create_buffer[dtype](KERNEL_SIZE).enqueue_fill(
+            0
+        )
 
         # Create test data: consecutive integers [1, 2, 3, ..., VECTOR_SIZE]
         with input_buf.map_to_host() as input_host:
@@ -101,9 +108,9 @@ def test_async_copy_overlap_convolution():
         output_tensor = LayoutTensor[mut=True, dtype, layout_async](
             output_buf.unsafe_ptr()
         )
-        kernel_tensor = LayoutTensor[mut=False, dtype, Layout.row_major(KERNEL_SIZE)](
-            kernel_buf.unsafe_ptr()
-        )
+        kernel_tensor = LayoutTensor[
+            mut=False, dtype, Layout.row_major(KERNEL_SIZE)
+        ](kernel_buf.unsafe_ptr())
 
         ctx.enqueue_function[
             async_copy_overlap_convolution[dtype, layout_async]
@@ -120,7 +127,10 @@ def test_async_copy_overlap_convolution():
         # Verify convolution results
         with output_buf.map_to_host() as output_host:
             with input_buf.map_to_host() as input_host:
-                print("Async copy overlap convolution - verifying first 10 values:")
+                print(
+                    "Async copy overlap convolution - verifying first 10"
+                    " values:"
+                )
 
                 var success = True
                 for i in range(min(10, VECTOR_SIZE)):
@@ -128,7 +138,10 @@ def test_async_copy_overlap_convolution():
 
                     # Match implementation logic: boundary elements copy input, center elements get convolution
                     var local_i_in_tile = i % CONV_TILE_SIZE
-                    if local_i_in_tile >= HALO_SIZE and local_i_in_tile < CONV_TILE_SIZE - HALO_SIZE:
+                    if (
+                        local_i_in_tile >= HALO_SIZE
+                        and local_i_in_tile < CONV_TILE_SIZE - HALO_SIZE
+                    ):
                         # Center elements: apply convolution
                         for k in range(KERNEL_SIZE):
                             var input_idx = i + k - HALO_SIZE
@@ -139,7 +152,16 @@ def test_async_copy_overlap_convolution():
                         expected_val = input_host[i]
 
                     actual = output_host[i]
-                    print("  Index", i, ": input=", input_host[i], ", output=", actual, ", expected=", expected_val)
+                    print(
+                        "  Index",
+                        i,
+                        ": input=",
+                        input_host[i],
+                        ", output=",
+                        actual,
+                        ", expected=",
+                        expected_val,
+                    )
 
                     if abs(actual - expected_val) > 0.01:
                         print("Mismatch at index", i)
