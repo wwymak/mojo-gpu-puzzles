@@ -118,7 +118,7 @@ run_mojo_files_with_sanitizer() {
           output=$(compute-sanitizer --tool "$tool" mojo "$f" "$specific_flag" 2>&1)
           filtered_output=$(echo "$output" | grep -E "$grep_pattern")
 
-          error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p')
+          error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p' | head -n1)
 
           if [ -n "$error_count" ] && [ "$error_count" -gt 0 ]; then
             echo -e "${RED}FOUND $error_count ERRORS!${NC}"
@@ -146,7 +146,7 @@ run_mojo_files_with_sanitizer() {
           output=$(compute-sanitizer --tool "$tool" mojo "$f" 2>&1)
           filtered_output=$(echo "$output" | grep -E "$grep_pattern")
 
-          error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p')
+          error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p' | head -n1)
 
           if [ -n "$error_count" ] && [ "$error_count" -gt 0 ]; then
             echo -e "${RED}FOUND $error_count ERRORS!${NC}"
@@ -165,7 +165,7 @@ run_mojo_files_with_sanitizer() {
             output=$(compute-sanitizer --tool "$tool" mojo "$f" "$flag" 2>&1)
             filtered_output=$(echo "$output" | grep -E "$grep_pattern")
 
-            error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p')
+            error_count=$(echo "$output" | grep -E "========= ERROR SUMMARY: [0-9]+ error" | sed -n 's/.*ERROR SUMMARY: \([0-9]\+\) error.*/\1/p' | head -n1)
 
             if [ -n "$error_count" ] && [ "$error_count" -gt 0 ]; then
               echo -e "${RED}FOUND $error_count ERRORS!${NC}"
