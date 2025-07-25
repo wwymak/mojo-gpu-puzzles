@@ -125,4 +125,6 @@ p24 = "mojo problems/p24/p24.mojo"
 
 p25 = "mojo problems/p25/p25.mojo"
 
+p26 = "mojo problems/p26/p26.mojo"
+
 all-animations = { cmd = "echo 'All animations generated!'", depends-on = ["viz01", "viz02", "viz03", "viz04", "viz05", "viz06", "viz07", "viz08", "viz09", "viz10", "viz11", "viz12", "viz13", "viz14", "rooflineviz"] }

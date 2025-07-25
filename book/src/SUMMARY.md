@@ -80,12 +80,11 @@
   - [🦋 warp.shuffle_xor() Butterfly Networks](./puzzle_24/warp_shuffle_xor.md)
   - [🔢 warp.prefix_sum() Scan Operations](./puzzle_24/warp_prefix_sum.md)
 
-# Part VII: Advanced Memory Systems
+# Part VII: 🧠 Advanced Memory Systems
 - [Puzzle 25: Async Memory Operations & Copy Overlap](./puzzle_25/puzzle_25.md)
-- [Puzzle 26: GPU Synchronization Primitives]()
-  - [🔄 Block Barriers & Thread Synchronization]()
-  - [🔒 Device-Wide Semaphores]()
-  - [🛡️ Memory Fences & Consistency Models]()
+- [Puzzle 26: GPU Synchronization Primitives](./puzzle_26/puzzle_26.md)
+  - [Multi-Stage Pipeline Coordination](./puzzle_26/barrier.md)
+  - [Double-Buffered Stencil Computation](./puzzle_26/memory_barrier.md)
 - [Puzzle 27: Advanced Memory Optimization]()
   - [💾 Cache Control & Memory Policies]()
   - [🛡️ Advanced Memory Fences & Ordering]()
