@@ -105,20 +105,19 @@ This book takes you on a journey from first principles to advanced GPU programmi
 
 ### Your Current Learning Path
 
-**Currently Available:** 25 puzzles covering Parts I-VI and beginning Part VII, providing a comprehensive foundation in GPU programming with Mojo.
-
 | Essential Skill | Status | Puzzles |
 |-----------------|--------|---------|
 | Thread/Block basics | ✅ **Available** | Part I (1-8) |
-| Core algorithms | ✅ **Available** | Part II (9-14) |
-| MAX Graph integration | ✅ **Available** | Part III (15-17) |
-| PyTorch integration | ✅ **Available** | Part IV (18-20) |
-| Functional patterns & benchmarking | ✅ **Available** | Part V (21) |
-| Warp programming | ✅ **Available** | Part VI (22-24) |
-| Advanced memory operations | 🚧 **In Progress** | Part VII (25+) |
-| Performance analysis | 📋 **Coming Soon** | Part VIII |
-| Modern GPU features | 📋 **Coming Soon** | Part IX |
-| Scaling up | 📋 **Coming Soon** | Part X |
+| Debugging GPU Programs | 📋 **Coming Soon** | Part II |
+| Core algorithms | ✅ **Available** | Part III (9-14) |
+| MAX Graph integration | ✅ **Available** | Part IV (15-17) |
+| PyTorch integration | ✅ **Available** | Part V (18-20) |
+| Functional patterns & benchmarking | ✅ **Available** | Part VI (21) |
+| Warp programming | ✅ **Available** | Part VII (22-24) |
+| Advanced memory operations | 🚧 **In Progress** | Part VIII (25+) |
+| Performance analysis | 📋 **Coming Soon** | Part IX |
+| Modern GPU features | 📋 **Coming Soon** | Part X |
+| Multi-GPU & Advanced Applications | 📋 **Coming Soon** | Part XI |
 
 ### Detailed Learning Objectives
 
@@ -128,7 +127,13 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Work with both raw pointers and LayoutTensor abstractions
 - Learn shared memory basics for inter-thread communication
 
-**Part II: GPU Algorithms (Puzzles 9-14) ✅**
+**Part II: Debugging GPU Programs 📋**
+- Master GPU debugger and debugging techniques
+- Learn to use sanitizers for catching memory errors and race conditions
+- Develop systematic approaches to identifying and fixing GPU bugs
+- Build confidence for tackling complex GPU programming challenges
+
+**Part III: GPU Algorithms (Puzzles 9-14) ✅**
 - Implement parallel reductions and pooling operations
 - Build efficient convolution kernels
 - Master prefix sum (scan) algorithms

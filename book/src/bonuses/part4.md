@@ -1,3 +1,4 @@
+# 🎯 Bonus Challenges
 # Bonus challenges
 
 ## Challenge I: Advanced softmax implementations

@@ -25,7 +25,11 @@
   - [🔰 Raw Memory Approach](./puzzle_08/raw.md)
   - [📐 LayoutTensor Version](./puzzle_08/layout_tensor.md)
 
-# Part II: 🧮 GPU Algorithms
+# Part II: Debugging GPU Programs
+- [GPU Debugger]()
+- [GPU Sanitizers]()
+
+# Part III: 🧮 GPU Algorithms
 - [Puzzle 9: Pooling](./puzzle_09/puzzle_09.md)
   - [🔰 Raw Memory Approach](./puzzle_09/raw.md)
   - [📐 LayoutTensor Version](./puzzle_09/layout_tensor.md)
@@ -45,13 +49,13 @@
     - [🤝 Shared Memory Version](./puzzle_14/shared_memory.md)
     - [📐 Tiled Version](./puzzle_14/tiled.md)
 
-# Part III: 🐍 Interfacing with Python via MAX Graph Custom Ops
+# Part IV: 🐍 Interfacing with Python via MAX Graph Custom Ops
 - [Puzzle 15: 1D Convolution Op](./puzzle_15/puzzle_15.md)
 - [Puzzle 16: Softmax Op](./puzzle_16/puzzle_16.md)
 - [Puzzle 17: Attention Op](./puzzle_17/puzzle_17.md)
-- [🎯 Bonus Challenges](./bonuses/part3.md)
+- [🎯 Bonus Challenges](./bonuses/part4.md)
 
-# Part IV: 🔥 PyTorch Custom Ops Integration
+# Part V: 🔥 PyTorch Custom Ops Integration
 - [Puzzle 18: 1D Convolution Op](./puzzle_18/puzzle_18.md)
 - [Puzzle 19: Embedding Op](./puzzle_19/puzzle_19.md)
   - [🔰 Coaleasced vs non-Coaleasced Kernel](./puzzle_19/simple_embedding_kernel.md)
@@ -60,7 +64,7 @@
   - [⚛️ Fused vs Unfused Kernels](./puzzle_20/forward_pass.md)
   - [⛓️ Autograd Integration & Backward Pass](./puzzle_20/backward_pass.md)
 
-# Part V: 🌊 Mojo Functional Patterns and Benchmarking
+# Part VI: 🌊 Mojo Functional Patterns and Benchmarking
 - [Puzzle 21: GPU Functional Programming Patterns](./puzzle_21/puzzle_21.md)
   - [elementwise - Basic GPU Functional Operations](./puzzle_21/elementwise.md)
   - [tile - Memory-Efficient Tiled Processing](./puzzle_21/tile.md)
@@ -68,7 +72,7 @@
   - [🧠 GPU Threading vs SIMD Concepts](./puzzle_21/gpu-thread-vs-simd.md)
   - [📊 Benchmarking in Mojo](./puzzle_21/benchmarking.md)
 
-# Part VI: ⚡ Warp-Level Programming
+# Part VII: ⚡ Warp-Level Programming
 - [Puzzle 22: Warp Fundamentals](./puzzle_22/puzzle_22.md)
   - [🧠 Warp lanes & SIMT execution](./puzzle_22/warp_simt.md)
   - [🔰 warp.sum() Essentials](./puzzle_22/warp_sum.md)
@@ -80,25 +84,24 @@
   - [🦋 warp.shuffle_xor() Butterfly Networks](./puzzle_24/warp_shuffle_xor.md)
   - [🔢 warp.prefix_sum() Scan Operations](./puzzle_24/warp_prefix_sum.md)
 
-# Part VII: 🧠 Advanced Memory Systems
+# Part VIII: 🧠 Advanced Memory Systems
 - [Puzzle 25: Async Memory Operations & Copy Overlap](./puzzle_25/puzzle_25.md)
 - [Puzzle 26: GPU Synchronization Primitives](./puzzle_26/puzzle_26.md)
   - [Multi-Stage Pipeline Coordination](./puzzle_26/barrier.md)
   - [Double-Buffered Stencil Computation](./puzzle_26/memory_barrier.md)
 - [Puzzle 27: Advanced Memory Optimization]()
   - [Essential TMA Operations (H100+)]()
-  - [Memory Access Pattern Optimization]()
 
-# Part VIII: 📊 Performance Analysis & Optimization
+# Part IX: 📊 Performance Analysis & Optimization
 - [Puzzle 28: GPU Profiling Basics]()
 - [Puzzle 29: Occupancy Optimization]()
 - [Puzzle 30: Bank Conflicts]()
   - [📚 Understanding Shared Memory Banks]()
   - [Conflict-Free Patterns]()
 
-# Part IX: 🚀 Advanced GPU Features
+# Part X: 🚀 Advanced GPU Features
 - [Puzzle 31: Tensor Core Operations]()
 
-# Part X: 🌐 Multi-GPU & Advanced Applications
+# Part XI: 🌐 Multi-GPU & Advanced Applications
 - [Puzzle 32: Multi-GPU Basics]()
 - [🎯 Advanced Bonus Challenges]()
