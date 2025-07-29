@@ -64,7 +64,7 @@
 - [Puzzle 21: GPU Functional Programming Patterns](./puzzle_21/puzzle_21.md)
   - [elementwise - Basic GPU Functional Operations](./puzzle_21/elementwise.md)
   - [tile - Memory-Efficient Tiled Processing](./puzzle_21/tile.md)
-  - [Vectorization - SIMD Control](./puzzle_21/vectorize.md)
+  - [vectorize - SIMD Control](./puzzle_21/vectorize.md)
   - [🧠 GPU Threading vs SIMD Concepts](./puzzle_21/gpu-thread-vs-simd.md)
   - [📊 Benchmarking in Mojo](./puzzle_21/benchmarking.md)
 
@@ -72,7 +72,7 @@
 - [Puzzle 22: Warp Fundamentals](./puzzle_22/puzzle_22.md)
   - [🧠 Warp lanes & SIMT execution](./puzzle_22/warp_simt.md)
   - [🔰 warp.sum() Essentials](./puzzle_22/warp_sum.md)
-  - [📊 When to Use Warp Programming](./puzzle_22/warp_extra.md)
+  - [🤔 When to Use Warp Programming](./puzzle_22/warp_extra.md)
 - [Puzzle 23: Warp Communication](./puzzle_23/puzzle_23.md)
   - [⬇️ warp.shuffle_down()](./puzzle_23/warp_shuffle_down.md)
   - [📢 warp.broadcast()](./puzzle_23/warp_broadcast.md)
@@ -86,10 +86,8 @@
   - [Multi-Stage Pipeline Coordination](./puzzle_26/barrier.md)
   - [Double-Buffered Stencil Computation](./puzzle_26/memory_barrier.md)
 - [Puzzle 27: Advanced Memory Optimization]()
-  - [💾 Cache Control & Memory Policies]()
-  - [🛡️ Advanced Memory Fences & Ordering]()
-  - [⚡ Essential TMA Operations (H100+)]()
-  - [🔬 Memory Access Pattern Optimization]()
+  - [Essential TMA Operations (H100+)]()
+  - [Memory Access Pattern Optimization]()
 
 # Part VIII: 📊 Performance Analysis & Optimization
 - [Puzzle 28: GPU Profiling Basics]()
@@ -100,11 +98,7 @@
 
 # Part IX: 🚀 Advanced GPU Features
 - [Puzzle 31: Tensor Core Operations]()
-- [Puzzle 32: Random Number Generation]()
-- [Puzzle 33: Advanced Synchronization]()
 
 # Part X: 🌐 Multi-GPU & Advanced Applications
-- [Puzzle 34: Multi-Stream Programming]()
-- [Puzzle 35: Multi-GPU Basics]()
-- [Puzzle 36: End-to-End Optimization Case Study]()
+- [Puzzle 32: Multi-GPU Basics]()
 - [🎯 Advanced Bonus Challenges]()
