@@ -1,403 +1,524 @@
-from gpu import thread_idx, block_idx, block_dim, barrier
-from gpu.sync import (
-    mbarrier_init,
-    mbarrier_arrive,
-    mbarrier_test_wait,
-)
+from gpu import thread_idx, block_idx, block_dim, lane_id
 from gpu.host import DeviceContext
+from gpu.warp import shuffle_xor, prefix_sum, WARP_SIZE
 from layout import Layout, LayoutTensor
-from layout.tensor_builder import LayoutTensorBuild as tb
-from layout.layout_tensor import copy_dram_to_sram_async
-from sys import sizeof, argv, info
-from testing import assert_true, assert_almost_equal
+from sys import argv
+from testing import assert_equal, assert_almost_equal
 
-alias TPB = 256  # Threads per block for pipeline stages
-alias SIZE = 1024  # Image size (1D for simplicity)
-alias BLOCKS_PER_GRID = (4, 1)
-alias THREADS_PER_BLOCK = (TPB, 1)
+
+alias SIZE = WARP_SIZE
+alias BLOCKS_PER_GRID = (1, 1)
+alias THREADS_PER_BLOCK = (WARP_SIZE, 1)
 alias dtype = DType.float32
 alias layout = Layout.row_major(SIZE)
 
-# Multi-stage processing configuration
-alias STAGE1_THREADS = TPB // 2
-alias STAGE2_THREADS = TPB // 2
-alias BLUR_RADIUS = 2
 
-
-# ANCHOR: multi_stage_pipeline_solution
-fn multi_stage_image_blur_pipeline[
-    layout: Layout
+# ANCHOR: butterfly_pair_swap_solution
+fn butterfly_pair_swap[
+    layout: Layout, size: Int
 ](
-    output: LayoutTensor[mut=True, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     input: LayoutTensor[mut=False, dtype, layout],
-    size: Int,
 ):
-    """Multi-stage image blur pipeline with barrier coordination.
-
-    Stage 1 (threads 0-127): Load input data and apply 1.1x preprocessing
-    Stage 2 (threads 128-255): Apply 5-point blur with BLUR_RADIUS=2
-    Stage 3 (all threads): Final neighbor smoothing and output
     """
-
-    # Shared memory buffers for pipeline stages
-    input_shared = tb[dtype]().row_major[TPB]().shared().alloc()
-    blur_shared = tb[dtype]().row_major[TPB]().shared().alloc()
-
+    Basic butterfly pair swap: Exchange values between adjacent pairs using XOR pattern.
+    Each thread exchanges its value with its XOR-1 neighbor, creating pairs: (0,1), (2,3), (4,5), etc.
+    Uses shuffle_xor(val, 1) to swap values within each pair.
+    This is the foundation of butterfly network communication patterns.
+    """
     global_i = block_dim.x * block_idx.x + thread_idx.x
-    local_i = thread_idx.x
 
-    # Stage 1: Load and preprocess (threads 0-127)
-    if local_i < STAGE1_THREADS:
-        if global_i < size:
-            input_shared[local_i] = input[global_i] * 1.1
-            # Each thread loads 2 elements
-            if local_i + STAGE1_THREADS < size:
-                input_shared[local_i + STAGE1_THREADS] = (
-                    input[global_i + STAGE1_THREADS] * 1.1
-                )
-        else:
-            # Zero-padding for out-of-bounds
-            input_shared[local_i] = 0.0
-            if local_i + STAGE1_THREADS < TPB:
-                input_shared[local_i + STAGE1_THREADS] = 0.0
-
-    barrier()  # Wait for Stage 1 completion
-
-    # Stage 2: Apply blur (threads 128-255)
-    if local_i >= STAGE1_THREADS:
-        blur_idx = local_i - STAGE1_THREADS
-        var blur_sum: Scalar[dtype] = 0.0
-        blur_count = 0
-
-        # 5-point blur kernel
-        for offset in range(-BLUR_RADIUS, BLUR_RADIUS + 1):
-            sample_idx = blur_idx + offset
-            if sample_idx >= 0 and sample_idx < TPB:
-                blur_sum += rebind[Scalar[dtype]](input_shared[sample_idx])
-                blur_count += 1
-
-        if blur_count > 0:
-            blur_shared[blur_idx] = blur_sum / blur_count
-        else:
-            blur_shared[blur_idx] = 0.0
-
-        # Process second element
-        second_idx = blur_idx + STAGE1_THREADS
-        if second_idx < TPB:
-            blur_sum = 0.0
-            blur_count = 0
-            for offset in range(-BLUR_RADIUS, BLUR_RADIUS + 1):
-                sample_idx = second_idx + offset
-                if sample_idx >= 0 and sample_idx < TPB:
-                    blur_sum += rebind[Scalar[dtype]](input_shared[sample_idx])
-                    blur_count += 1
-
-            if blur_count > 0:
-                blur_shared[second_idx] = blur_sum / blur_count
-            else:
-                blur_shared[second_idx] = 0.0
-
-    barrier()  # Wait for Stage 2 completion
-
-    # Stage 3: Final smoothing (all threads)
     if global_i < size:
-        final_value = blur_shared[local_i]
+        current_val = input[global_i]
 
-        # Neighbor smoothing with 0.6 scaling
-        if local_i > 0:
-            final_value = (final_value + blur_shared[local_i - 1]) * 0.6
-        if local_i < TPB - 1:
-            final_value = (final_value + blur_shared[local_i + 1]) * 0.6
+        # Exchange with XOR-1 neighbor using butterfly pattern
+        # Lane 0 exchanges with lane 1, lane 2 with lane 3, etc.
+        swapped_val = shuffle_xor(current_val, 1)
 
-        output[global_i] = final_value
-
-    barrier()  # Ensure all writes complete
+        # For demonstration, we'll store the swapped value
+        # In real applications, this might be used for sorting, reduction, etc.
+        output[global_i] = swapped_val
 
 
-# ANCHOR_END: multi_stage_pipeline_solution
+# ANCHOR_END: butterfly_pair_swap_solution
 
 
-# Double-buffered stencil configuration
-alias STENCIL_ITERATIONS = 3
-alias BUFFER_COUNT = 2
-
-
-# ANCHOR: double_buffered_stencil_solution
-fn double_buffered_stencil_computation[
-    layout: Layout
+# ANCHOR: butterfly_parallel_max_solution
+fn butterfly_parallel_max[
+    layout: Layout, size: Int
 ](
-    output: LayoutTensor[mut=True, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     input: LayoutTensor[mut=False, dtype, layout],
-    size: Int,
 ):
-    """Double-buffered stencil computation with memory barrier coordination.
-
-    Iteratively applies 3-point stencil using alternating buffers.
-    Uses mbarrier APIs for precise buffer swap coordination.
     """
-
-    # Double-buffering: Two shared memory buffers
-    buffer_A = tb[dtype]().row_major[TPB]().shared().alloc()
-    buffer_B = tb[dtype]().row_major[TPB]().shared().alloc()
-
-    # Memory barriers for coordinating buffer swaps
-    init_barrier = tb[DType.uint64]().row_major[1]().shared().alloc()
-    iter_barrier = tb[DType.uint64]().row_major[1]().shared().alloc()
-    final_barrier = tb[DType.uint64]().row_major[1]().shared().alloc()
-
+    Parallel maximum reduction using butterfly pattern.
+    Uses shuffle_xor with decreasing offsets (16, 8, 4, 2, 1) to perform tree-based reduction.
+    Each step reduces the active range by half until all threads have the maximum value.
+    This implements an efficient O(log n) parallel reduction algorithm.
+    """
     global_i = block_dim.x * block_idx.x + thread_idx.x
-    local_i = thread_idx.x
 
-    # Initialize barriers (only thread 0)
-    if local_i == 0:
-        mbarrier_init(init_barrier.ptr, TPB)
-        mbarrier_init(iter_barrier.ptr, TPB)
-        mbarrier_init(final_barrier.ptr, TPB)
+    if global_i < size:
+        max_val = input[global_i]
 
-    # Initialize buffer_A with input data
-    if local_i < TPB and global_i < size:
-        buffer_A[local_i] = input[global_i]
-    else:
-        buffer_A[local_i] = 0.0
+        # Butterfly reduction tree: dynamic for any WARP_SIZE (32, 64, etc.)
+        # Start with half the warp size and reduce by half each step
+        offset = WARP_SIZE // 2
+        while offset > 0:
+            max_val = max(max_val, shuffle_xor(max_val, offset))
+            offset //= 2
 
-    # Wait for buffer_A initialization
-    _ = mbarrier_arrive(init_barrier.ptr)
-    _ = mbarrier_test_wait(init_barrier.ptr, TPB)
+        # All threads now have the maximum value across the entire warp
+        output[global_i] = max_val
 
-    # Iterative stencil processing with double-buffering
-    @parameter
-    for iteration in range(STENCIL_ITERATIONS):
 
-        @parameter
-        if iteration % 2 == 0:
-            # Even iteration: Read from A, Write to B
-            if local_i < TPB:
-                var stencil_sum: Scalar[dtype] = 0.0
-                var stencil_count: Int = 0
+# ANCHOR_END: butterfly_parallel_max_solution
 
-                # 3-point stencil: [i-1, i, i+1]
-                for offset in range(-1, 2):
-                    sample_idx = local_i + offset
-                    if sample_idx >= 0 and sample_idx < TPB:
-                        stencil_sum += rebind[Scalar[dtype]](
-                            buffer_A[sample_idx]
-                        )
-                        stencil_count += 1
 
-                if stencil_count > 0:
-                    buffer_B[local_i] = stencil_sum / stencil_count
-                else:
-                    buffer_B[local_i] = buffer_A[local_i]
+alias SIZE_2 = 64
+alias BLOCKS_PER_GRID_2 = (2, 1)
+alias THREADS_PER_BLOCK_2 = (WARP_SIZE, 1)
+alias layout_2 = Layout.row_major(SIZE_2)
 
+
+# ANCHOR: butterfly_conditional_max_solution
+fn butterfly_conditional_max[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Conditional butterfly maximum: Perform butterfly max reduction, but only store result
+    in even-numbered lanes. Odd-numbered lanes store the minimum value seen.
+    Demonstrates conditional logic combined with butterfly communication patterns.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
+
+    if global_i < size:
+        current_val = input[global_i]
+        min_val = current_val
+
+        # Butterfly reduction for both maximum and minimum: dynamic for any WARP_SIZE
+        offset = WARP_SIZE // 2
+        while offset > 0:
+            neighbor_val = shuffle_xor(current_val, offset)
+            current_val = max(current_val, neighbor_val)
+
+            min_neighbor_val = shuffle_xor(min_val, offset)
+            min_val = min(min_val, min_neighbor_val)
+
+            offset //= 2
+
+        # Conditional output: max for even lanes, min for odd lanes
+        if lane % 2 == 0:
+            output[global_i] = current_val  # Maximum
         else:
-            # Odd iteration: Read from B, Write to A
-            if local_i < TPB:
-                var stencil_sum: Scalar[dtype] = 0.0
-                var stencil_count: Int = 0
+            output[global_i] = min_val  # Minimum
 
-                # 3-point stencil: [i-1, i, i+1]
-                for offset in range(-1, 2):
-                    sample_idx = local_i + offset
-                    if sample_idx >= 0 and sample_idx < TPB:
-                        stencil_sum += rebind[Scalar[dtype]](
-                            buffer_B[sample_idx]
-                        )
-                        stencil_count += 1
 
-                if stencil_count > 0:
-                    buffer_A[local_i] = stencil_sum / stencil_count
-                else:
-                    buffer_A[local_i] = buffer_B[local_i]
+# ANCHOR_END: butterfly_conditional_max_solution
 
-        # Memory barrier: wait for all writes before buffer swap
-        _ = mbarrier_arrive(iter_barrier.ptr)
-        _ = mbarrier_test_wait(iter_barrier.ptr, TPB)
 
-        # Reinitialize barrier for next iteration
-        if local_i == 0:
-            mbarrier_init(iter_barrier.ptr, TPB)
+# ANCHOR: warp_inclusive_prefix_sum_solution
+fn warp_inclusive_prefix_sum[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Inclusive prefix sum using warp primitive: Each thread gets sum of all elements up to and including its position.
+    Compare this to Puzzle 12's complex shared memory + barrier approach.
 
-    # Write final results from active buffer
-    if local_i < TPB and global_i < size:
+    Puzzle 12 approach:
+    - Shared memory allocation
+    - Multiple barrier synchronizations
+    - Log(n) iterations with manual tree reduction
+    - Complex multi-phase algorithm
 
-        @parameter
-        if STENCIL_ITERATIONS % 2 == 0:
-            # Even iterations end in buffer_A
-            output[global_i] = buffer_A[local_i]
+    Warp prefix_sum approach:
+    - Single function call!
+    - Hardware-optimized parallel scan
+    - Automatic synchronization
+    - O(log n) complexity, but implemented in hardware.
+
+    NOTE: This implementation only works correctly within a single warp (WARP_SIZE threads).
+    For multi-warp scenarios, additional coordination would be needed.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+
+    if global_i < size:
+        current_val = input[global_i]
+
+        # This one call replaces ~30 lines of complex shared memory logic from Puzzle 12!
+        # But it only works within the current warp (WARP_SIZE threads)
+        scan_result = prefix_sum[exclusive=False](
+            rebind[Scalar[dtype]](current_val)
+        )
+
+        output[global_i] = scan_result
+
+
+# ANCHOR_END: warp_inclusive_prefix_sum_solution
+
+
+# ANCHOR: warp_partition_solution
+fn warp_partition[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+    pivot: Float32,
+):
+    """
+    Single-warp parallel partitioning using BOTH shuffle_xor AND prefix_sum.
+    This implements a warp-level quicksort partition step that places elements < pivot
+    on the left and elements >= pivot on the right.
+
+    ALGORITHM COMPLEXITY - combines two advanced warp primitives:
+    1. shuffle_xor(): Butterfly pattern for warp-level reductions
+    2. prefix_sum(): Warp-level exclusive scan for position calculation.
+
+    This demonstrates the power of warp primitives for sophisticated parallel algorithms
+    within a single warp (works for any WARP_SIZE: 32, 64, etc.).
+
+    Example with pivot=5:
+    Input:  [3, 7, 1, 8, 2, 9, 4, 6]
+    Result: [3, 1, 2, 4, 7, 8, 9, 6] (< pivot | >= pivot).
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+
+    if global_i < size:
+        current_val = input[global_i]
+
+        # Phase 1: Create warp-level predicates
+        predicate_left = Float32(1.0) if current_val < pivot else Float32(0.0)
+        predicate_right = Float32(1.0) if current_val >= pivot else Float32(0.0)
+
+        # Phase 2: Warp-level prefix sum to get positions within warp
+        warp_left_pos = prefix_sum[exclusive=True](predicate_left)
+        warp_right_pos = prefix_sum[exclusive=True](predicate_right)
+
+        # Phase 3: Get total left count using shuffle_xor reduction
+        warp_left_total = predicate_left
+
+        # Butterfly reduction to get total across the warp: dynamic for any WARP_SIZE
+        offset = WARP_SIZE // 2
+        while offset > 0:
+            warp_left_total += shuffle_xor(warp_left_total, offset)
+            offset //= 2
+
+        # Phase 4: Write to output positions
+        if current_val < pivot:
+            # Left partition: use warp-level position
+            output[Int(warp_left_pos)] = current_val
         else:
-            # Odd iterations end in buffer_B
-            output[global_i] = buffer_B[local_i]
-
-    # Final barrier
-    _ = mbarrier_arrive(final_barrier.ptr)
-    _ = mbarrier_test_wait(final_barrier.ptr, TPB)
+            # Right partition: offset by total left count + right position
+            output[Int(warp_left_total + warp_right_pos)] = current_val
 
 
-# ANCHOR_END: double_buffered_stencil_solution
+# ANCHOR_END: warp_partition_solution
 
 
-def test_multi_stage_pipeline():
-    """Test Puzzle 26A: Multi-Stage Pipeline Coordination."""
+def test_butterfly_pair_swap():
     with DeviceContext() as ctx:
-        out = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
-        inp = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
 
-        # Initialize input with a simple pattern
-        with inp.map_to_host() as inp_host:
+        with input_buf.map_to_host() as input_host:
             for i in range(SIZE):
-                # Create a simple wave pattern for blurring
-                inp_host[i] = Float32(i % 10) + Float32(i / 100.0)
+                input_host[i] = i
 
-        # Create LayoutTensors
-        out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
-        inp_tensor = LayoutTensor[mut=False, dtype, layout](inp.unsafe_ptr())
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
 
-        ctx.enqueue_function[multi_stage_image_blur_pipeline[layout]](
-            out_tensor,
-            inp_tensor,
-            SIZE,
+        ctx.enqueue_function[butterfly_pair_swap[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected results: pairs should be swapped
+        # (0,1) -> (1,0), (2,3) -> (3,2), (4,5) -> (5,4), etc.
+        for i in range(SIZE):
+            if i % 2 == 0:
+                # Even positions get odd values
+                expected_buf[i] = i + 1
+            else:
+                # Odd positions get even values
+                expected_buf[i] = i - 1
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+            for i in range(SIZE):
+                assert_equal(output_host[i], expected_buf[i])
+
+    print("✅ Butterfly pair swap test passed!")
+
+
+def test_butterfly_parallel_max():
+    with DeviceContext() as ctx:
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            for i in range(SIZE):
+                input_host[i] = i * 2
+            # Make sure we have a clear maximum
+            input_host[SIZE - 1] = 1000.0
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[butterfly_parallel_max[layout, SIZE]](
+            output_tensor,
+            input_tensor,
             grid_dim=BLOCKS_PER_GRID,
             block_dim=THREADS_PER_BLOCK,
         )
 
         ctx.synchronize()
 
-        # Simple verification - check that output differs from input and values are reasonable
-        with out.map_to_host() as out_host, inp.map_to_host() as inp_host:
-            print("Multi-stage pipeline blur completed")
-            print("Input sample:", inp_host[0], inp_host[1], inp_host[2])
-            print("Output sample:", out_host[0], out_host[1], out_host[2])
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            1000.0
+        )
 
-            # Basic verification - output should be different from input (pipeline processed them)
-            assert_true(
-                abs(out_host[0] - inp_host[0]) > 0.001,
-                "Pipeline should modify values",
-            )
-            assert_true(
-                abs(out_host[1] - inp_host[1]) > 0.001,
-                "Pipeline should modify values",
-            )
-            assert_true(
-                abs(out_host[2] - inp_host[2]) > 0.001,
-                "Pipeline should modify values",
-            )
+        # All threads should have the maximum value (1000.0)
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
 
-            # Values should be reasonable (not NaN, not extreme)
-            for i in range(10):
-                assert_true(
-                    out_host[i] >= 0.0, "Output values should be non-negative"
-                )
-                assert_true(
-                    out_host[i] < 1000.0, "Output values should be reasonable"
-                )
-
-            print("✅ Multi-stage pipeline coordination test PASSED!")
-
-
-def test_double_buffered_stencil():
-    """Test Puzzle 26B: Double-Buffered Stencil Computation."""
-    with DeviceContext() as ctx:
-        # Test Puzzle 26B: Double-Buffered Stencil Computation
-        out = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
-        inp = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
-
-        # Initialize input with a different pattern for stencil testing
-        with inp.map_to_host() as inp_host:
             for i in range(SIZE):
-                # Create a step pattern that will be smoothed by stencil
-                inp_host[i] = Float32(1.0 if i % 20 < 10 else 0.0)
+                assert_almost_equal(output_host[i], 1000.0, rtol=1e-5)
 
-        # Create LayoutTensors for Puzzle 26B
-        out_tensor = LayoutTensor[mut=True, dtype, layout](out.unsafe_ptr())
-        inp_tensor = LayoutTensor[mut=False, dtype, layout](inp.unsafe_ptr())
+    print("✅ Butterfly parallel max test passed!")
 
-        ctx.enqueue_function[double_buffered_stencil_computation[layout]](
-            out_tensor,
-            inp_tensor,
-            SIZE,
-            grid_dim=BLOCKS_PER_GRID,
-            block_dim=THREADS_PER_BLOCK,
+
+def test_butterfly_conditional_max():
+    with DeviceContext() as ctx:
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE_2).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE_2).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            for i in range(SIZE_2):
+                if i < 9:
+                    values = [3, 1, 7, 2, 9, 4, 8, 5, 6]
+                    input_host[i] = values[i]
+                else:
+                    input_host[i] = i % 10
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout_2](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout_2](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[butterfly_conditional_max[layout_2, SIZE_2]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID_2,
+            block_dim=THREADS_PER_BLOCK_2,
         )
 
         ctx.synchronize()
 
-        # Simple verification - check that GPU implementation works correctly
-        with inp.map_to_host() as inp_host, out.map_to_host() as out_host:
-            print("Double-buffered stencil completed")
-            print("Input sample:", inp_host[0], inp_host[1], inp_host[2])
-            print("GPU output sample:", out_host[0], out_host[1], out_host[2])
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](
+            SIZE_2
+        ).enqueue_fill(0)
 
-            # Basic sanity checks
-            var processing_occurred = False
-            var all_values_valid = True
+        # Expected: even lanes get max, odd lanes get min
+        with input_buf.map_to_host() as input_host:
+            max_val = input_host[0]
+            min_val = input_host[0]
+            for i in range(1, SIZE_2):
+                if input_host[i] > max_val:
+                    max_val = input_host[i]
+                if input_host[i] < min_val:
+                    min_val = input_host[i]
+
+            for i in range(SIZE_2):
+                if i % 2 == 0:
+                    expected_buf[i] = max_val
+                else:
+                    expected_buf[i] = min_val
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+
+            for i in range(SIZE_2):
+                if i % 2 == 0:
+                    assert_almost_equal(output_host[i], max_val, rtol=1e-5)
+                else:
+                    assert_almost_equal(output_host[i], min_val, rtol=1e-5)
+
+    print("✅ Butterfly conditional max test passed!")
+
+
+def test_warp_inclusive_prefix_sum():
+    with DeviceContext() as ctx:
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            for i in range(SIZE):
+                input_host[i] = i + 1
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[warp_inclusive_prefix_sum[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected inclusive prefix sum: [1, 3, 6, 10, 15, 21, 28, 36, ...]
+        with input_buf.map_to_host() as input_host:
+            expected_buf[0] = input_host[0]
+            for i in range(1, SIZE):
+                expected_buf[i] = expected_buf[i - 1] + input_host[i]
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+            for i in range(SIZE):
+                assert_almost_equal(output_host[i], expected_buf[i], rtol=1e-5)
+
+    print("✅ Warp inclusive prefix sum test passed!")
+
+
+def test_warp_partition():
+    with DeviceContext() as ctx:
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        # Create test data: mix of values above and below pivot
+        pivot_value = Float32(5.0)
+        with input_buf.map_to_host() as input_host:
+            # Create: [3, 7, 1, 8, 2, 9, 4, 6, ...]
+            test_values = [3, 7, 1, 8, 2, 9, 4, 6, 0, 10, 3, 11, 1, 12, 4, 13]
+            for i in range(SIZE):
+                input_host[i] = test_values[i % len(test_values)]
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[warp_partition[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            pivot_value,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected results: elements < 5 on left, >= 5 on right
+        with input_buf.map_to_host() as input_host:
+            left_values = List[Float32]()
+            right_values = List[Float32]()
 
             for i in range(SIZE):
-                # Check if processing occurred (output should differ from step pattern)
-                if abs(out_host[i] - inp_host[i]) > 0.001:
-                    processing_occurred = True
+                if input_host[i] < pivot_value:
+                    left_values.append(input_host[i])
+                else:
+                    right_values.append(input_host[i])
 
-                # Check for invalid values (NaN, infinity, or out of reasonable range)
-                if out_host[i] < 0.0 or out_host[i] > 1.0:
-                    all_values_valid = False
+            # Fill expected buffer
+            for i in range(len(left_values)):
+                expected_buf[i] = left_values[i]
+            for i in range(len(right_values)):
+                expected_buf[len(left_values) + i] = right_values[i]
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+            print("pivot:", pivot_value)
+
+            # Verify partitioning property (left < pivot, right >= pivot)
+            # Find partition boundary
+            var partition_point = 0
+            for i in range(SIZE):
+                if output_host[i] >= pivot_value:
+                    partition_point = i
                     break
 
-            # Verify the stencil smoothed the step pattern
-            assert_true(
-                processing_occurred, "Stencil should modify the input values"
-            )
-            assert_true(
-                all_values_valid,
-                "All output values should be in valid range [0,1]",
-            )
+            # Check left partition
+            for i in range(partition_point):
+                if output_host[i] >= pivot_value:
+                    print("ERROR: Left partition contains value >= pivot")
 
-            # Check that values are smoothed (no sharp transitions)
-            var smooth_transitions = True
-            for i in range(1, SIZE - 1):
-                # Check if transitions are reasonably smooth (not perfect step function)
-                var left_diff = abs(out_host[i] - out_host[i - 1])
-                var right_diff = abs(out_host[i + 1] - out_host[i])
-                # After 3 stencil iterations, sharp 0->1 transitions should be smoothed
-                if left_diff > 0.8 or right_diff > 0.8:
-                    smooth_transitions = False
-                    break
+            # Check right partition
+            for i in range(partition_point, SIZE):
+                if output_host[i] < pivot_value:
+                    print("ERROR: Right partition contains value < pivot")
 
-            assert_true(
-                smooth_transitions, "Stencil should smooth sharp transitions"
-            )
-
-            print("✅ Double-buffered stencil test PASSED!")
+    print("✅ Warp partition test passed!")
 
 
 def main():
-    """Run GPU synchronization tests based on command line arguments."""
-    print("Puzzle 26: GPU Synchronization Primitives")
-    print("=" * 50)
-
-    # Parse command line arguments
+    print("WARP_SIZE: ", WARP_SIZE)
     if len(argv()) != 2:
-        print("Usage: p26.mojo [--multi-stage | --double-buffer]")
-        print("  --multi-stage: Test multi-stage pipeline coordination")
-        print("  --double-buffer: Test double-buffered stencil computation")
+        print(
+            "Usage: p24.mojo"
+            " [--pair-swap|--parallel-max|--conditional-max|--prefix-sum|--partition]"
+        )
         return
 
-    if argv()[1] == "--multi-stage":
-        print("TPB:", TPB)
-        print("SIZE:", SIZE)
-        print("STAGE1_THREADS:", STAGE1_THREADS)
-        print("STAGE2_THREADS:", STAGE2_THREADS)
-        print("BLUR_RADIUS:", BLUR_RADIUS)
-        print("")
-        print("Testing Puzzle 26A: Multi-Stage Pipeline Coordination")
-        print("=" * 60)
-        test_multi_stage_pipeline()
-    elif argv()[1] == "--double-buffer":
-        print("TPB:", TPB)
-        print("SIZE:", SIZE)
-        print("STENCIL_ITERATIONS:", STENCIL_ITERATIONS)
-        print("BUFFER_COUNT:", BUFFER_COUNT)
-        print("")
-        print("Testing Puzzle 26B: Double-Buffered Stencil Computation")
-        print("=" * 60)
-        test_double_buffered_stencil()
+    test_type = argv()[1]
+    if test_type == "--pair-swap":
+        print("SIZE: ", SIZE)
+        test_butterfly_pair_swap()
+    elif test_type == "--parallel-max":
+        print("SIZE: ", SIZE)
+        test_butterfly_parallel_max()
+    elif test_type == "--conditional-max":
+        print("SIZE: ", SIZE_2)
+        test_butterfly_conditional_max()
+    elif test_type == "--prefix-sum":
+        print("SIZE: ", SIZE)
+        test_warp_inclusive_prefix_sum()
+    elif test_type == "--partition":
+        print("SIZE: ", SIZE)
+        test_warp_partition()
     else:
-        print("Usage: p26.mojo [--multi-stage | --double-buffer]")
+        print(
+            "Usage: p24.mojo"
+            " [--pair-swap|--parallel-max|--conditional-max|--prefix-sum|--partition]"
+        )

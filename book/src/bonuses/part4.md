@@ -3,7 +3,7 @@
 
 ## Challenge I: Advanced softmax implementations
 
-*This challenge extends [Puzzle 16: Softmax Op](../puzzle_16/puzzle_16.md)*
+*This challenge extends [Puzzle 18: Softmax Op](../puzzle_18/puzzle_18.md)*
 
 Here are some advanced challenges to extend your softmax implementation:
 
@@ -34,7 +34,7 @@ Implement softmax for a batch of vectors (2D input tensor) with these variants:
 
 ## Challenge II: Advanced attention mechanisms
 
-*This challenge extends [Puzzle 17: Attention Op](../puzzle_17/puzzle_17.md)*
+*This challenge extends [Puzzle 19: Attention Op](../puzzle_19/puzzle_19.md)*
 
 Building on the vector attention implementation, here are advanced challenges that push the boundaries of attention mechanisms:
 

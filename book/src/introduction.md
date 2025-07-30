@@ -50,7 +50,8 @@ Mojo represents a fresh approach to GPU programming, making this massive paralle
 - **Ergonomic and Safety Improvements** over traditional C/C++ GPU programming
 - **Lower Barrier to Entry** enabling more programmers to harness GPU power effectively
 
-> **Mojo 🔥 aims to fuel innovation by democratizing GPU programming.** >**By expanding on Python's familiar syntax while adding direct GPU access, Mojo empowers programmers with minimal specialized knowledge to build high-performance, heterogeneous (CPU, GPU-enabled) applications.**
+> **Mojo 🔥 aims to fuel innovation by democratizing GPU programming.**
+>**By expanding on Python's familiar syntax while adding direct GPU access, Mojo empowers programmers with minimal specialized knowledge to build high-performance, heterogeneous (CPU, GPU-enabled) applications.**
 
 ## The GPU Programming Mindset
 
@@ -109,14 +110,15 @@ This book takes you on a journey from first principles to advanced GPU programmi
 |-----------------|--------|---------|
 | Thread/Block basics | ✅ **Available** | Part I (1-8) |
 | Debugging GPU Programs | 📋 **Coming Soon** | Part II |
-| Core algorithms | ✅ **Available** | Part III (9-14) |
-| MAX Graph integration | ✅ **Available** | Part IV (15-17) |
-| PyTorch integration | ✅ **Available** | Part V (18-20) |
-| Functional patterns & benchmarking | ✅ **Available** | Part VI (21) |
-| Warp programming | ✅ **Available** | Part VII (22-24) |
-| Advanced memory operations | 🚧 **In Progress** | Part VIII (25+) |
-| Performance analysis | 📋 **Coming Soon** | Part IX |
-| Modern GPU features | 📋 **Coming Soon** | Part X |
+| Core algorithms | ✅ **Available** | Part III (11-16) |
+| MAX Graph integration | ✅ **Available** | Part IV (17-19) |
+| PyTorch integration | ✅ **Available** | Part V (20-22) |
+| Functional patterns & benchmarking | ✅ **Available** | Part VI (23) |
+| Warp programming | ✅ **Available** | Part VII (24-26) |
+| Block-level programming | 📋 **Coming Soon** | Part VIII (27) |
+| Advanced memory operations | ✅ **Available** | Part IX (28-29) |
+| Performance analysis | 📋 **Coming Soon** | Part X |
+| Modern GPU features | 📋 **Coming Soon** | Part XI |
 
 ### Detailed Learning Objectives
 
@@ -132,47 +134,52 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Develop systematic approaches to identifying and fixing GPU bugs
 - Build confidence for tackling complex GPU programming challenges
 
-**Part III: GPU Algorithms (Puzzles 9-14) ✅**
+**Part III: GPU Algorithms (Puzzles 11-16) ✅**
 - Implement parallel reductions and pooling operations
 - Build efficient convolution kernels
 - Master prefix sum (scan) algorithms
 - Optimize matrix multiplication with tiling strategies
 
-**Part III: MAX Graph Integration (Puzzles 15-17) ✅**
+**Part IV: MAX Graph Integration (Puzzles 17-19) ✅**
 - Create custom MAX Graph operations
 - Interface GPU kernels with Python code
 - Build production-ready operations like softmax and attention
 
-**Part IV: PyTorch Integration (Puzzles 18-20) ✅**
+**Part V: PyTorch Integration (Puzzles 20-22) ✅**
 - Bridge Mojo GPU kernels with PyTorch tensors
 - Use CustomOpLibrary for seamless tensor marshalling
 - Integrate with torch.compile for optimized execution
 - Master kernel fusion and custom backward passes
 
-**Part V: Mojo Functional Patterns & Benchmarking (Puzzle 21) ✅**
+**Part VI: Mojo Functional Patterns & Benchmarking (Puzzle 23) ✅**
 - Master functional patterns: elementwise, tiled processing, vectorization
 - Learn systematic performance optimization and trade-offs
 - Develop quantitative benchmarking skills for performance analysis
 - Understand GPU threading vs SIMD execution hierarchies
 
-**Part VI: Warp-Level Programming (Puzzles 22-24) ✅**
+**Part VII: Warp-Level Programming (Puzzles 24-26) ✅**
 - Master warp fundamentals and SIMT execution models
 - Learn essential warp operations: sum, shuffle_down, broadcast
 - Implement advanced patterns with shuffle_xor and prefix_sum
 - Combine warp programming with functional patterns effectively
 
-**Part VII: Advanced Memory Operations (Puzzle 25+) 🚧**
+**Part VIII: Block-Level Programming (Puzzle 27) 📋**
+- Master block-wide reductions with `block.sum()` and `block.max()`
+- Learn block-level prefix sum patterns and communication
+- Implement efficient block.broadcast() for intra-block coordination
+
+**Part IX: Advanced Memory Systems (Puzzles 28-29) ✅**
 - Achieve optimal memory coalescing patterns
 - Use async memory operations for overlapping compute with latency hiding
 - Learn memory fences and synchronization primitives
 - Master prefetching and cache optimization strategies
 
-**Part VIII: Performance Analysis & Optimization 📋**
+**Part X: Performance Analysis & Optimization 📋**
 - Profile GPU kernels and identify bottlenecks
 - Optimize occupancy and resource utilization
 - Eliminate shared memory bank conflicts
 
-**Part IX: Advanced GPU Features 📋**
+**Part XI: Advanced GPU Features 📋**
 - Program tensor cores for AI workloads
 - Implement GPU-based random number generation
 - Master advanced synchronization patterns

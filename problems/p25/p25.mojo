@@ -1,157 +1,440 @@
-from gpu import thread_idx, block_idx, block_dim, grid_dim, barrier
+from gpu import thread_idx, block_idx, block_dim, lane_id
 from gpu.host import DeviceContext
-from gpu.memory import async_copy_wait_all
+from gpu.warp import shuffle_down, broadcast, WARP_SIZE
 from layout import Layout, LayoutTensor
-from layout.tensor_builder import LayoutTensorBuild as tb
-from layout.layout_tensor import copy_dram_to_sram_async
-from sys import argv, info
+from sys import argv
 from testing import assert_equal, assert_almost_equal
 
-# ANCHOR: async_copy_overlap_convolution
-alias VECTOR_SIZE = 16384
-alias CONV_TILE_SIZE = 256
-alias KERNEL_SIZE = 5
-alias HALO_SIZE = KERNEL_SIZE // 2  # Halo elements needed for boundary
-alias BUFFER_SIZE = CONV_TILE_SIZE + 2 * HALO_SIZE  # Include halo for boundary conditions
-alias BLOCKS_PER_GRID_ASYNC = (
-    VECTOR_SIZE + CONV_TILE_SIZE - 1
-) // CONV_TILE_SIZE
-alias THREADS_PER_BLOCK_ASYNC = 256
+# ANCHOR: neighbor_difference
+alias SIZE = WARP_SIZE
+alias BLOCKS_PER_GRID = (1, 1)
+alias THREADS_PER_BLOCK = (WARP_SIZE, 1)
 alias dtype = DType.float32
-alias layout_async = Layout.row_major(VECTOR_SIZE)
+alias layout = Layout.row_major(SIZE)
 
 
-fn async_copy_overlap_convolution[
-    dtype: DType, layout: Layout
+fn neighbor_difference[
+    layout: Layout, size: Int
 ](
-    output: LayoutTensor[mut=True, dtype, layout],
+    output: LayoutTensor[mut=False, dtype, layout],
     input: LayoutTensor[mut=False, dtype, layout],
-    kernel: LayoutTensor[mut=False, dtype, Layout.row_major(KERNEL_SIZE)],
 ):
-    """Demonstrates async copy operations building on p14 patterns.
-
-    This shows how to use copy_dram_to_sram_async and async_copy_wait_all
-    for efficient memory transfers, extending the patterns from p14 matmul.
     """
+    Compute finite differences: output[i] = input[i+1] - input[i]
+    Uses shuffle_down(val, 1) to get the next neighbor's value.
+    Works across multiple blocks, each processing one warp worth of data.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
 
-    # Shared memory buffers (like p14, but without .fill(0) to avoid race)
-    input_shared = tb[dtype]().row_major[CONV_TILE_SIZE]().shared().alloc()
-    kernel_shared = tb[dtype]().row_major[KERNEL_SIZE]().shared().alloc()
-
-    # FILL IN HERE (roughly 19 lines)
+    # FILL IN (roughly 7 lines)
 
 
-# ANCHOR_END: async_copy_overlap_convolution
+# ANCHOR_END: neighbor_difference
+
+# ANCHOR: moving_average_3
+alias SIZE_2 = 64
+alias BLOCKS_PER_GRID_2 = (2, 1)
+alias THREADS_PER_BLOCK_2 = (WARP_SIZE, 1)
+alias layout_2 = Layout.row_major(SIZE_2)
 
 
-def test_async_copy_overlap_convolution():
-    """Test async copy overlap with 1D convolution."""
+fn moving_average_3[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Compute 3-point moving average: output[i] = (input[i] + input[i+1] + input[i+2]) / 3
+    Uses shuffle_down with offsets 1 and 2 to access neighbors.
+    Works within warp boundaries across multiple blocks.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
+
+    # FILL IN (roughly 10 lines)
+
+
+# ANCHOR_END: moving_average_3
+
+
+# ANCHOR: broadcast_shuffle_coordination
+fn broadcast_shuffle_coordination[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Combine broadcast() and shuffle_down() for advanced warp coordination.
+    Lane 0 computes block-local scaling factor, broadcasts it to all lanes in the warp.
+    Each lane uses shuffle_down() for neighbor access and applies broadcast factor.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
+    if global_i < size:
+        var scale_factor: output.element_type = 0.0
+
+        # FILL IN (roughly 14 lines)
+
+
+# ANCHOR_END: broadcast_shuffle_coordination
+
+
+# ANCHOR: basic_broadcast
+fn basic_broadcast[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Basic broadcast: Lane 0 computes a block-local value, broadcasts it to all lanes.
+    Each lane then uses this broadcast value in its own computation.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
+    if global_i < size:
+        var broadcast_value: output.element_type = 0.0
+
+        # FILL IN (roughly 10 lines)
+
+
+# ANCHOR_END: basic_broadcast
+
+
+# ANCHOR: conditional_broadcast
+fn conditional_broadcast[
+    layout: Layout, size: Int
+](
+    output: LayoutTensor[mut=False, dtype, layout],
+    input: LayoutTensor[mut=False, dtype, layout],
+):
+    """
+    Conditional broadcast: Lane 0 makes a decision based on block-local data, broadcasts it to all lanes.
+    All lanes apply different logic based on the broadcast decision.
+    """
+    global_i = block_dim.x * block_idx.x + thread_idx.x
+    lane = lane_id()
+    if global_i < size:
+        var decision_value: output.element_type = 0.0
+
+        # FILL IN (roughly 10 lines)
+
+        current_input = input[global_i]
+        threshold = decision_value / 2.0
+        if current_input >= threshold:
+            output[global_i] = current_input * 2.0  # Double if >= threshold
+        else:
+            output[global_i] = current_input / 2.0  # Halve if < threshold
+
+
+# ANCHOR_END: conditional_broadcast
+
+
+def test_neighbor_difference():
     with DeviceContext() as ctx:
-        input_buf = ctx.enqueue_create_buffer[dtype](VECTOR_SIZE).enqueue_fill(
-            0
-        )
-        output_buf = ctx.enqueue_create_buffer[dtype](VECTOR_SIZE).enqueue_fill(
-            0
-        )
-        kernel_buf = ctx.enqueue_create_buffer[dtype](KERNEL_SIZE).enqueue_fill(
-            0
-        )
+        # Create test data: [0, 1, 4, 9, 16, 25, ...] (squares)
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
 
-        # Create test data: consecutive integers [1, 2, 3, ..., VECTOR_SIZE]
         with input_buf.map_to_host() as input_host:
-            for i in range(VECTOR_SIZE):
-                input_host[i] = Float32(i + 1)
+            for i in range(SIZE):
+                input_host[i] = i * i
 
-        # Create test kernel: [1, 2, 3, 4, 5]
-        with kernel_buf.map_to_host() as kernel_host:
-            for i in range(KERNEL_SIZE):
-                kernel_host[i] = Float32(i + 1)
-
-        input_tensor = LayoutTensor[mut=False, dtype, layout_async](
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
             input_buf.unsafe_ptr()
         )
-        output_tensor = LayoutTensor[mut=True, dtype, layout_async](
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
             output_buf.unsafe_ptr()
         )
-        kernel_tensor = LayoutTensor[
-            mut=False, dtype, Layout.row_major(KERNEL_SIZE)
-        ](kernel_buf.unsafe_ptr())
 
-        ctx.enqueue_function[
-            async_copy_overlap_convolution[dtype, layout_async]
-        ](
+        ctx.enqueue_function[neighbor_difference[layout, SIZE]](
             output_tensor,
             input_tensor,
-            kernel_tensor,
-            grid_dim=(BLOCKS_PER_GRID_ASYNC, 1),
-            block_dim=(THREADS_PER_BLOCK_ASYNC, 1),
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
         )
 
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
         ctx.synchronize()
 
-        # Verify convolution results
+        # Create expected results: differences of squares should be odd numbers
+        for i in range(SIZE - 1):
+            expected_buf[i] = (i + 1) * (i + 1) - i * i
+        expected_buf[
+            SIZE - 1
+        ] = 0  # Last element should be 0 (no valid neighbor)
+
         with output_buf.map_to_host() as output_host:
-            with input_buf.map_to_host() as input_host:
-                print(
-                    "Async copy overlap convolution - verifying first 10"
-                    " values:"
-                )
+            print("output:", output_host)
+            print("expected:", expected_buf)
+            for i in range(SIZE):
+                assert_equal(output_host[i], expected_buf[i])
 
-                var success = True
-                for i in range(min(10, VECTOR_SIZE)):
-                    var expected_val: Float32 = 0
+    print("✅ Basic neighbor difference test passed!")
 
-                    # Match implementation logic: boundary elements copy input, center elements get convolution
-                    var local_i_in_tile = i % CONV_TILE_SIZE
-                    if (
-                        local_i_in_tile >= HALO_SIZE
-                        and local_i_in_tile < CONV_TILE_SIZE - HALO_SIZE
-                    ):
-                        # Center elements: apply convolution
-                        for k in range(KERNEL_SIZE):
-                            var input_idx = i + k - HALO_SIZE
-                            if input_idx >= 0 and input_idx < VECTOR_SIZE:
-                                expected_val += input_host[input_idx] * (k + 1)
+
+def test_moving_average():
+    with DeviceContext() as ctx:
+        # Create test data: [1, 2, 4, 7, 11, 16, 22, 29, ...]
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE_2).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE_2).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            input_host[0] = 1
+            for i in range(1, SIZE_2):
+                input_host[i] = input_host[i - 1] + i + 1
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout_2](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout_2](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[moving_average_3[layout_2, SIZE_2]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID_2,
+            block_dim=THREADS_PER_BLOCK_2,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](
+            SIZE_2
+        ).enqueue_fill(0)
+        ctx.synchronize()
+
+        # Create expected results
+        with input_buf.map_to_host() as input_host:
+            for block in range(BLOCKS_PER_GRID_2[0]):
+                warp_start = block * WARP_SIZE
+                warp_end = min(warp_start + WARP_SIZE, SIZE_2)
+
+                for i in range(warp_start, warp_end):
+                    lane = i % WARP_SIZE
+                    if lane < WARP_SIZE - 2 and i < SIZE_2 - 2:
+                        # 3-point average within warp
+                        expected_buf[i] = (
+                            input_host[i]
+                            + input_host[i + 1]
+                            + input_host[i + 2]
+                        ) / 3.0
+                    elif lane < WARP_SIZE - 1 and i < SIZE_2 - 1:
+                        # 2-point average
+                        expected_buf[i] = (
+                            input_host[i] + input_host[i + 1]
+                        ) / 2.0
                     else:
-                        # Boundary elements: copy input
-                        expected_val = input_host[i]
+                        # Single value
+                        expected_buf[i] = input_host[i]
 
-                    actual = output_host[i]
-                    print(
-                        "  Index",
-                        i,
-                        ": input=",
-                        input_host[i],
-                        ", output=",
-                        actual,
-                        ", expected=",
-                        expected_val,
-                    )
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
 
-                    if abs(actual - expected_val) > 0.01:
-                        print("Mismatch at index", i)
-                        success = False
-                        break
+            # Verify results
+            for i in range(SIZE_2):
+                assert_almost_equal(output_host[i], expected_buf[i], rtol=1e-5)
 
-                if success:
-                    print("Async copy overlap convolution test PASSED!")
+    print("✅ Moving average test passed!")
+
+
+def test_broadcast_shuffle_coordination():
+    with DeviceContext() as ctx:
+        # Create test data: [2, 4, 6, 8, 1, 3, 5, 7, ...]
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            # Create pattern: [2, 4, 6, 8, 1, 3, 5, 7, ...]
+            for i in range(SIZE):
+                if i < 4:
+                    input_host[i] = (i + 1) * 2
                 else:
-                    print("Async copy overlap convolution test FAILED!")
+                    input_host[i] = ((i - 4) % 4) * 2 + 1
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[broadcast_shuffle_coordination[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected results
+        with input_buf.map_to_host() as input_host:
+            # Lane 0 computes scale_factor from first 4 elements in block: (2+4+6+8)/4 = 5.0
+            expected_scale = Float32(5.0)
+
+            for i in range(SIZE):
+                if i < SIZE - 1:
+                    expected_buf[i] = (
+                        input_host[i] + input_host[i + 1]
+                    ) * expected_scale
+                else:
+                    expected_buf[i] = input_host[i] * expected_scale
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+            # Verify results
+            for i in range(SIZE):
+                assert_almost_equal(output_host[i], expected_buf[i], rtol=1e-4)
+
+    print("✅ Broadcast + Shuffle coordination test passed!")
+
+
+def test_basic_broadcast():
+    with DeviceContext() as ctx:
+        # Create test data: [1, 2, 3, 4, 5, 6, 7, 8, ...]
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            for i in range(SIZE):
+                input_host[i] = i + 1
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[basic_broadcast[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected results
+        with input_buf.map_to_host() as input_host:
+            # Lane 0 computes broadcast_value from first 4 elements: 1+2+3+4 = 10
+            expected_broadcast = Float32(10.0)
+            for i in range(SIZE):
+                expected_buf[i] = expected_broadcast + input_host[i]
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+
+            # Verify results
+            for i in range(SIZE):
+                assert_almost_equal(output_host[i], expected_buf[i], rtol=1e-4)
+
+    print("✅ Basic broadcast test passed!")
+
+
+def test_conditional_broadcast():
+    with DeviceContext() as ctx:
+        # Create test data: [3, 1, 7, 2, 9, 4, 6, 8, ...]
+        input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+        output_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
+
+        with input_buf.map_to_host() as input_host:
+            # Create pattern with known max
+            test_values = [
+                Float32(3.0),
+                Float32(1.0),
+                Float32(7.0),
+                Float32(2.0),
+                Float32(9.0),
+                Float32(4.0),
+                Float32(6.0),
+                Float32(8.0),
+            ]
+            for i in range(SIZE):
+                input_host[i] = test_values[i % len(test_values)]
+
+        input_tensor = LayoutTensor[mut=False, dtype, layout](
+            input_buf.unsafe_ptr()
+        )
+        output_tensor = LayoutTensor[mut=False, dtype, layout](
+            output_buf.unsafe_ptr()
+        )
+
+        ctx.enqueue_function[conditional_broadcast[layout, SIZE]](
+            output_tensor,
+            input_tensor,
+            grid_dim=BLOCKS_PER_GRID,
+            block_dim=THREADS_PER_BLOCK,
+        )
+
+        expected_buf = ctx.enqueue_create_host_buffer[dtype](SIZE).enqueue_fill(
+            0
+        )
+        ctx.synchronize()
+
+        # Create expected results
+        with input_buf.map_to_host() as input_host:
+            # Lane 0 finds max of first 8 elements in block: max(3,1,7,2,9,4,6,8) = 9.0, threshold = 4.5
+            expected_max = Float32(9.0)
+            threshold = expected_max / 2.0
+            for i in range(SIZE):
+                if input_host[i] >= threshold:
+                    expected_buf[i] = input_host[i] * 2.0
+                else:
+                    expected_buf[i] = input_host[i] / 2.0
+
+        with output_buf.map_to_host() as output_host:
+            print("output:", output_host)
+            print("expected:", expected_buf)
+
+            # Verify results
+            for i in range(SIZE):
+                assert_almost_equal(output_host[i], expected_buf[i], rtol=1e-4)
+
+    print("✅ Conditional broadcast test passed!")
 
 
 def main():
-    """Run memory fence tests based on command line arguments."""
-    if len(argv()) != 1:
-        print("Usage: p25.mojo")
+    print("WARP_SIZE: ", WARP_SIZE)
+    if len(argv()) < 1 or len(argv()) > 2:
+        print(
+            "Usage: p23.mojo"
+            " [--neighbor|--average|--broadcast-basic|--broadcast-conditional|--broadcast-shuffle-coordination]"
+        )
         return
 
-    print("Puzzle 25: Async Memory Operations & Copy Overlap")
-    print("=" * 50)
-    print("VECTOR_SIZE:", VECTOR_SIZE)
-    print("CONV_TILE_SIZE:", CONV_TILE_SIZE)
-    print("KERNEL_SIZE:", KERNEL_SIZE)
-    print("HALO_SIZE:", HALO_SIZE)
-    print("BUFFER_SIZE:", BUFFER_SIZE)
-    print("BLOCKS_PER_GRID_ASYNC:", BLOCKS_PER_GRID_ASYNC)
-    print("THREADS_PER_BLOCK_ASYNC:", THREADS_PER_BLOCK_ASYNC)
-    test_async_copy_overlap_convolution()
+    test_type = argv()[1]
+    if test_type == "--neighbor":
+        print("SIZE: ", SIZE)
+        test_neighbor_difference()
+    elif test_type == "--average":
+        print("SIZE_2: ", SIZE_2)
+        test_moving_average()
+    elif test_type == "--broadcast-basic":
+        print("SIZE: ", SIZE)
+        test_basic_broadcast()
+    elif test_type == "--broadcast-conditional":
+        print("SIZE: ", SIZE)
+        test_conditional_broadcast()
+    elif test_type == "--broadcast-shuffle-coordination":
+        print("SIZE: ", SIZE)
+        test_broadcast_shuffle_coordination()
+    else:
+        print(
+            "Usage: p23.mojo"
+            " [--neighbor|--average|--broadcast-basic|--broadcast-conditional|--broadcast-shuffle-coordination]"
+        )
