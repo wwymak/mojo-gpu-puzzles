@@ -117,7 +117,6 @@ This book takes you on a journey from first principles to advanced GPU programmi
 | Advanced memory operations | 🚧 **In Progress** | Part VIII (25+) |
 | Performance analysis | 📋 **Coming Soon** | Part IX |
 | Modern GPU features | 📋 **Coming Soon** | Part X |
-| Multi-GPU & Advanced Applications | 📋 **Coming Soon** | Part XI |
 
 ### Detailed Learning Objectives
 
@@ -177,11 +176,6 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Program tensor cores for AI workloads
 - Implement GPU-based random number generation
 - Master advanced synchronization patterns
-
-**Part X: Multi-GPU & Advanced Applications 📋**
-- Implement multi-stream concurrent execution
-- Scale across multiple GPUs
-- Build end-to-end optimized applications
 
 The book uniquely challenges the status quo approach by first building understanding with low-level memory manipulation, then gradually transitioning to Mojo's powerful LayoutTensor abstractions. This gives you both deep understanding of GPU memory patterns and practical knowledge of modern tensor-based approaches.
 

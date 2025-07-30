@@ -101,7 +101,3 @@
 
 # Part X: 🚀 Advanced GPU Features
 - [Puzzle 31: Tensor Core Operations]()
-
-# Part XI: 🌐 Multi-GPU & Advanced Applications
-- [Puzzle 32: Multi-GPU Basics]()
-- [🎯 Advanced Bonus Challenges]()
