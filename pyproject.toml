@@ -2,15 +2,16 @@
 name = "mojo-gpu-puzzles"
 version = "0.0.0"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
-    "max>=25.5.0.dev2025062619",
+    "max>=25.6.0.dev2025073105",
     "poethepoet>=0.34.0",
     "torch==2.7.1",
 ]
 
 [[tool.uv.index]]
 url = "https://dl.modular.com/public/nightly/python/simple/"
+prerelease = "allow"
 
 [[tool.uv.index]]
 name = "pytorch-cu128"
@@ -68,6 +69,7 @@ p17 = [
 ]
 
 p18-package = "mojo package problems/p18/op -o problems/p18/op.mojopkg"
+# FIXME: currently broken for the uv path with the mojo dep changes but is ok with pixi through conda
 p18-test-kernels = { cmd = "mojo test problems/p18", deps = ["p18-package"] }
 p18 = { cmd = "python problems/p18/p18.py", deps = ["p18-package"] }
 
@@ -91,4 +93,5 @@ p25 = "mojo problems/p25/p25.mojo"
 p26 = "mojo problems/p26/p26.mojo"
 
 p28 = "mojo problems/p28/p28.mojo"
+
 p29 = "mojo problems/p29/p29.mojo"
