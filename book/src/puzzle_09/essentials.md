@@ -132,7 +132,7 @@ This means you can:
 - **Set breakpoints inside GPU kernels** - pause execution when any thread hits your breakpoint
 - **Switch between GPU threads** - examine what different threads are doing at the same moment
 - **Inspect thread-specific data** - see how the same variable has different values across threads
-- **Debug memory access patterns** - catch out-of-bounds access, race conditions, and memory corruption (more on detecting such issues in the Puzzle 10 TODO)
+- **Debug memory access patterns** - catch out-of-bounds access, race conditions, and memory corruption (more on detecting such issues in the Puzzle 10)
 - **Analyze parallel execution** - understand how your threads interact and synchronize
 
 ### Connecting to concepts from previous puzzles
@@ -269,32 +269,9 @@ Theory is great, but nothing beats hands-on experience. Let's debug a real progr
 
 By the end of this tutorial, you'll have debugged the same program using all four debugging approaches, seen real debugger output, and learned the essential debugging commands you'll use daily.
 
-### Your debugging toolbox: Four approaches
+### Learning path through the debugging approaches
 
-Here's what we'll explore, from simplest to most powerful:
-
-```bash
-# Approach 1: JIT + LLDB (Start here - debug CPU setup code)
-pixi run mojo debug solutions/p01/p01.mojo
-
-# Approach 2: JIT + CUDA-GDB (Debug the GPU kernel)
-pixi run mojo debug --cuda-gdb --break-on-launch solutions/p01/p01.mojo
-
-# Approach 3: Binary + LLDB (Professional CPU debugging)
-pixi run mojo build -O0 -g solutions/p01/p01.mojo -o solutions/p01/p01_debug
-pixi run mojo debug solutions/p01/p01_debug
-
-# Approach 4: Binary + CUDA-GDB (Professional GPU debugging)
-pixi run mojo debug --cuda-gdb --break-on-launch solutions/p01/p01_debug
-```
-
-**What each approach teaches you:**
-- **LLDB approaches** → Debug buffer allocation, memory setup, host-side logic
-- **CUDA-GDB approaches** → Debug parallel execution, thread behavior, GPU memory
-- **JIT approaches** → Quick iteration, learning, prototyping
-- **Binary approaches** → Production debugging, performance analysis, serious bug hunting
-
-**Learning path**: We'll start with JIT + LLDB (easiest), then progress to CUDA-GDB (most powerful). By the end, you'll know exactly which approach to use for different types of bugs.
+We'll explore the [four debugging combinations](#the-four-debugging-combinations) using Puzzle 01 as our example. **Learning path**: We'll start with JIT + LLDB (easiest), then progress to CUDA-GDB (most powerful).
 
 **⚠️ Important for GPU debugging**:
 - The `--break-on-launch` flag is **required** for CUDA-GDB approaches
@@ -519,14 +496,11 @@ Choose your approach:
 # Make sure you've run this already (once is enough)
 pixi run setup-cuda-gdb
 
-# Option A: JIT debugging with CUDA-GDB (we'll use this)
+# We'll use JIT + CUDA-GDB (Approach 2 from above)
 pixi run mojo debug --cuda-gdb --break-on-launch solutions/p01/p01.mojo
-
-# Option B: Pre-compiled binary debugging with CUDA-GDB
-pixi run mojo debug --cuda-gdb --break-on-launch solutions/p01/p01_debug
 ```
 
-We'll use **Option A** (JIT approach) since it's perfect for learning and quick iterations.
+We'll use the **JIT + CUDA-GDB approach** since it's perfect for learning and quick iterations.
 
 **Step 2: Launch and automatically stop at GPU kernel entry**
 
@@ -771,6 +745,32 @@ You've completed a comprehensive GPU debugging tutorial. Here's what you discove
 
 Now that you've learned the debugging workflow, here's your **quick reference guide** for daily debugging sessions. Bookmark this section!
 
+### GDB command abbreviations (save time!)
+
+**Most commonly used shortcuts** for faster debugging:
+
+| Abbreviation | Full Command | Function |
+|-------------|-------------|----------|
+| `r` | `run` | Start/launch the program |
+| `c` | `continue` | Resume execution |
+| `n` | `next` | Step over (same level) |
+| `s` | `step` | Step into functions |
+| `b` | `break` | Set breakpoint |
+| `p` | `print` | Print variable value |
+| `l` | `list` | Show source code |
+| `q` | `quit` | Exit debugger |
+
+**Examples:**
+```bash
+(cuda-gdb) r                    # Instead of 'run'
+(cuda-gdb) b 39                 # Instead of 'break 39'
+(cuda-gdb) p thread_id          # Instead of 'print thread_id'
+(cuda-gdb) n                    # Instead of 'next'
+(cuda-gdb) c                    # Instead of 'continue'
+```
+
+**⚡ Pro tip**: Use abbreviations for 3-5x faster debugging sessions!
+
 ## LLDB commands (CPU host code debugging)
 
 **When to use**: Debugging device setup, memory allocation, program flow, host-side crashes
@@ -1012,17 +1012,6 @@ You didn't just read about GPU debugging - you **experienced it**:
 ```
 
 ---
-
-## What's Next: Real Debugging Challenges
-
-You're now ready for **Puzzle 10: Memory Error Detection & Race Conditions with Sanitizers** - a hands-on debugging challenge where you'll:
-
-**Investigate a real GPU crash** using your new debugging skills
-**Apply systematic debugging** to identify the root cause
-**Fix complex GPU bugs** that mirror real-world problems
-**Apply your knowledge** by solving challenging parallel programming issues
-
-You'll apply everything you learned here - CUDA-GDB commands, thread navigation, conditional breakpoints, memory inspection - to solve debugging challenges that build on these foundational skills.
 
 ### Summary
 
