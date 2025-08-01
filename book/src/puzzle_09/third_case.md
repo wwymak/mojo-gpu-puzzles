@@ -276,15 +276,15 @@ if thread_id < SIZE - 1:        # ← Only threads 0, 1, 2 enter this block
 
 **What went wrong**:
 ```mojo
-// ❌ WRONG: Barrier inside conditional
-if thread_id < SIZE - 1:    // Not all threads enter
-    // ... some computation ...
-    barrier()               // Only some threads reach this
+# ❌ WRONG: Barrier inside conditional
+if thread_id < SIZE - 1:    # Not all threads enter
+    # ... some computation ...
+    barrier()               # Only some threads reach this
 
-// ✅ CORRECT: Barrier outside conditional
-if thread_id < SIZE - 1:    // Not all threads enter
-    // ... some computation ...
-// barrier()                // ALL threads reach this
+# ✅ CORRECT: Barrier outside conditional
+if thread_id < SIZE - 1:    # Not all threads enter
+    # ... some computation ...
+ barrier()                # ALL threads reach this
 ```
 
 **The Fix**: Move the barrier outside the conditional block:
@@ -296,19 +296,19 @@ fn collaborative_filter(
     thread_id = thread_idx.x
     shared_workspace = tb[dtype]().row_major[SIZE-1]().shared().alloc()
 
-    // Phase 1: Initialize shared workspace (all threads participate)
+    # Phase 1: Initialize shared workspace (all threads participate)
     if thread_id < SIZE - 1:
         shared_workspace[thread_id] = rebind[Scalar[dtype]](input[thread_id])
     barrier()
 
-    // Phase 2: Collaborative processing
+    # Phase 2: Collaborative processing
     if thread_id < SIZE - 1:
         if thread_id > 0:
             shared_workspace[thread_id] += shared_workspace[thread_id - 1] * 0.5
-    // ✅ FIX: Move barrier outside conditional so ALL threads reach it
+    # ✅ FIX: Move barrier outside conditional so ALL threads reach it
     barrier()
 
-    // Phase 3: Final synchronization and output
+    # Phase 3: Final synchronization and output
     barrier()
 
     if thread_id < SIZE - 1:
@@ -379,7 +379,7 @@ You've mastered the systematic approach used by professional GPU developers:
 4. **Test systematically** - Verify each hypothesis through targeted investigation
 5. **Trace to root cause** - Follow the evidence chain to the source
 
-**🎯 Achievement Unlocked**: You can now debug the three most common GPU programming issues:
+**Achievement Unlocked**: You can now debug the three most common GPU programming issues:
 - **Memory crashes** ([First Case](./first_case.md)) - null pointers, out-of-bounds access
 - **Logic bugs** ([Second Case](./second_case.md)) - algorithmic errors, incorrect results
 - **Coordination deadlocks** ([Third Case](./third_case.md)) - barrier synchronization failures
