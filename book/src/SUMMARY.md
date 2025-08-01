@@ -25,8 +25,9 @@
   - [🔰 Raw Memory Approach](./puzzle_08/raw.md)
   - [📐 LayoutTensor Version](./puzzle_08/layout_tensor.md)
 
-# Part II: Debugging GPU Programs
-- [Puzzle 9: GPU Debugging Workflow]()
+# Part II: 🐞 Debugging GPU Programs
+- [Puzzle 9: GPU Debugging Workflow](./puzzle_09/puzzle_09.md)
+  - [📚 Mojo GPU Debugging Essentials](./puzzle_09/essentials.md)
   - [The Mysterious Kernel Crash]()
 - [Puzzle 10: Memory Error Detection & Race Conditions with Sanitizers]()
   - [The Silent Data Corruption]()
