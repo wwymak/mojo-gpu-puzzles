@@ -319,19 +319,19 @@ fn collaborative_filter(
 
 ## Key debugging lessons
 
-**Barrier Deadlock Detection**:
+**Barrier deadlock detection**:
 1. **Use `info cuda threads`** - Shows which threads are at which lines
 2. **Look for thread state divergence** - Some threads at different program locations
 3. **Trace conditional execution paths** - Check if all threads reach the same barriers
 4. **Verify barrier reachability** - Ensure no thread can skip a barrier that others reach
 
-**Professional GPU Debugging Reality**:
+**Professional GPU debugging reality**:
 - **Deadlocks are silent killers** - programs just hang with no error messages
 - **Thread coordination debugging requires patience** - systematic analysis of each thread's path
 - **Conditional barriers are the #1 deadlock cause** - always verify all threads reach the same sync points
 - **CUDA-GDB thread inspection is essential** - the only way to see thread coordination failures
 
-**Advanced GPU Synchronization**:
+**Advanced GPU synchronization**:
 - **Barrier rule**: ALL threads in a block must reach the SAME barrier
 - **Conditional execution pitfalls**: Any if-statement can cause thread divergence
 - **Shared memory coordination**: Requires careful barrier placement for correct synchronization
@@ -348,28 +348,28 @@ This type of debugging - using CUDA-GDB to analyze thread states, identify diver
 </div>
 </details>
 
-## Next Steps: GPU Debugging Mastery Complete
+## Next steps: GPU debugging mastery complete
 
 🏆 **You've completed the GPU debugging trilogy!**
 
-### Your Complete GPU Debugging Arsenal
+### Your complete GPU debugging arsenal
 
-**From the [First Case](./first_case.md) - Crash Debugging:**
+**From the [First Case](./first_case.md) - Crash debugging:**
 - ✅ **Systematic crash investigation** using error messages as guides
 - ✅ **Memory bug detection** through pointer address inspection
 - ✅ **CUDA-GDB fundamentals** for memory-related issues
 
-**From the [Second Case](./second_case.md) - Logic Bug Debugging:**
+**From the [Second Case](./second_case.md) - Logic bug debugging:**
 - ✅ **Algorithm error investigation** without obvious symptoms
 - ✅ **Pattern analysis techniques** for tracing wrong results to root causes
 - ✅ **Execution flow debugging** when variable inspection fails
 
-**From the [Third Case](./third_case.md) - Coordination Debugging:**
+**From the [Third Case](./third_case.md) - Coordination debugging:**
 - ✅ **Barrier deadlock investigation** for thread coordination failures
 - ✅ **Multi-thread state analysis** using advanced CUDA-GDB techniques
 - ✅ **Synchronization verification** for complex parallel programs
 
-### The Professional GPU Debugging Methodology
+### The professional GPU debugging methodology
 
 You've mastered the systematic approach used by professional GPU developers:
 

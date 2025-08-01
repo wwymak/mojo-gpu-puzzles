@@ -22,9 +22,9 @@ Unlike traditional CPU debugging where you follow a single thread through sequen
 
 But here's the exciting part: **once you master GPU debugging, you'll understand parallel computing at a deeper level than most developers ever reach**.
 
-## What you'll master in this puzzle
+## What you'll learn in this puzzle
 
-This puzzle transforms you from someone who *writes* GPU code to someone who can *debug* GPU code professionally. You'll learn the systematic approaches, tools, and techniques that GPU developers use daily to solve complex parallel programming challenges.
+This puzzle transforms you from someone who *writes* GPU code to someone who can *debug* GPU code as well. You'll learn the systematic approaches, tools, and techniques that GPU developers use daily to solve complex parallel programming challenges.
 
 ### **Essential skills you'll develop**
 

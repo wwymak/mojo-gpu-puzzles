@@ -173,7 +173,7 @@ input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
 4. **Test memory access** - Try dereferencing suspicious pointers
 5. **Trace back to allocation** - Find where the problematic pointer was created
 
-**💡 Professional Insight**: This type of null pointer bug is extremely common in GPU programming. The systematic CUDA-GDB investigation approach you learned here applies to debugging many other GPU memory issues, race conditions, and kernel crashes.
+**💡 Key Insight**: This type of null pointer bug is extremely common in GPU programming. The systematic CUDA-GDB investigation approach you learned here applies to debugging many other GPU memory issues, race conditions, and kernel crashes.
 
 </div>
 </details>

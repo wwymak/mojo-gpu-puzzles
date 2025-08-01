@@ -246,7 +246,7 @@ pixi run cuda-gdb --version
 
 If any of these commands fail, double-check your `pixi.toml` configuration and ensure the CUDA toolkit feature is enabled.
 
-**🚨 Important**: The `pixi run setup-cuda-gdb` command is required because conda's `cuda-gdb` package only provides a wrapper script. This command links the actual CUDA-GDB binaries from your system CUDA installation (`/usr/local/cuda/`) to the conda environment, enabling full GPU debugging capabilities.
+**🚨Important**: The `pixi run setup-cuda-gdb` command is required because conda's `cuda-gdb` package only provides a wrapper script. This command links the actual CUDA-GDB binaries from your system CUDA installation (`/usr/local/cuda/`) to the conda environment, enabling full GPU debugging capabilities.
 
 **What this command does under the hood:**
 ```bash
@@ -519,7 +519,7 @@ CUDA thread hit application kernel entry function breakpoint, p01_add_10_UnsafeP
 16          i = thread_idx.x
 ```
 
-**🎯 Success! You're automatically stopped inside the GPU kernel!** The `--break-on-launch` flag caught the kernel launch and you're now at line 16 where `i = thread_idx.x` executes.
+**Success! You're automatically stopped inside the GPU kernel!** The `--break-on-launch` flag caught the kernel launch and you're now at line 16 where `i = thread_idx.x` executes.
 
 **Important**: You **don't** need to manually set breakpoints like `break add_10` - the kernel entry breakpoint is automatic. GPU kernel functions have mangled names in CUDA-GDB (like `p01_add_10_UnsafePointer...`), but you're already inside the kernel and can start debugging immediately.
 
@@ -808,7 +808,6 @@ Now that you've learned the debugging workflow, here's your **quick reference gu
 ```bash
 (cuda-gdb) info cuda threads    # Show all GPU threads and their state
 (cuda-gdb) info cuda blocks     # Show all thread blocks
-# (cuda-gdb) info cuda memory   # ❌ Doesn't work - "Unrecognized option: 'memory'"
 (cuda-gdb) cuda kernel          # List active GPU kernels
 ```
 
@@ -821,7 +820,7 @@ Now that you've learned the debugging workflow, here's your **quick reference gu
 
 ### Thread-specific variable inspection
 ```bash
-# ✅ Local variables and function parameters:
+# Local variables and function parameters:
 (cuda-gdb) print i              # Local thread index variable
 (cuda-gdb) print output         # Function parameter pointers
 (cuda-gdb) print a              # Function parameter pointers
@@ -829,7 +828,7 @@ Now that you've learned the debugging workflow, here's your **quick reference gu
 
 ### GPU memory access
 ```bash
-# ✅ Array inspection using local variables (what actually works):
+# Array inspection using local variables (what actually works):
 (cuda-gdb) print array[i]       # Thread-specific array access using local variable
 (cuda-gdb) print array[0]@4     # View multiple elements: {{val1}, {val2}, {val3}, {val4}}
 (cuda-gdb) print/x &array[0]    # Memory address of array start
@@ -1008,7 +1007,6 @@ You didn't just read about GPU debugging - you **experienced it**:
 # Memory debugging
 (cuda-gdb) print array[i]              # Thread-specific data using local variable
 (cuda-gdb) print array[0]@4            # Array segments: {{val1}, {val2}, {val3}, {val4}}
-# (cuda-gdb) info cuda memory          # ❌ Doesn't work in Mojo
 ```
 
 ---

@@ -214,7 +214,7 @@ CUDA thread hit Breakpoint 1, p09_process_sliding_window_...
 38          for offset in range(ITER):
 ```
 
-**📝 First iteration complete**: Loop went from line 39 → 40 → back to 38. The loop continues.
+**First iteration complete**: Loop went from line 39 → 40 → back to 38. The loop continues.
 
 #### Step 8: Second loop iteration (offset = 1)
 ```bash
@@ -234,7 +234,7 @@ CUDA thread hit Breakpoint 1, p09_process_sliding_window_...
 38          for offset in range(ITER):
 ```
 
-**📝 Second iteration complete**: This time it went through the if-block (lines 41-42).
+**Second iteration complete**: This time it went through the if-block (lines 41-42).
 
 #### Step 9: testing for third iteration
 ```bash
@@ -242,7 +242,7 @@ CUDA thread hit Breakpoint 1, p09_process_sliding_window_...
 44          output[thread_id] = window_sum
 ```
 
-**🚨 CRITICAL DISCOVERY**: The loop exited after only 2 iterations! It went directly to line 44 instead of hitting our breakpoint at line 39 again.
+**CRITICAL DISCOVERY**: The loop exited after only 2 iterations! It went directly to line 44 instead of hitting our breakpoint at line 39 again.
 
 **Conclusion**: The loop ran exactly **2 iterations** and then exited.
 
@@ -331,7 +331,7 @@ for offset in range(ITER):           # ← Only 2 iterations: [0, 1]
 - Focus on the algorithm logic rather than trying to inspect tensor contents
 - Use systematic reasoning to trace what each thread should vs actually accesses
 
-**💡 Professional Insight**: This type of off-by-one loop bug is extremely common in GPU programming. The systematic approach you learned here - combining limited debugger info with mathematical analysis and pattern recognition - is exactly how professional GPU developers debug when tools have limitations.
+**💡 Key Insight**: This type of off-by-one loop bug is extremely common in GPU programming. The systematic approach you learned here - combining limited debugger info with mathematical analysis and pattern recognition - is exactly how professional GPU developers debug when tools have limitations.
 
 </div>
 </details>
