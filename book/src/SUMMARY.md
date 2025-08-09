@@ -31,9 +31,9 @@
   - [🧐 Detective Work: First Case](./puzzle_09/first_case.md)
   - [🔍 Detective Work: Second Case](./puzzle_09/second_case.md)
   - [🕵 Detective Work: Third Case](./puzzle_09/third_case.md)
-- [Puzzle 10: Memory Error Detection & Race Conditions with Sanitizers]()
-  - [The Silent Data Corruption]()
-  - [The Race Condition Mystery]()
+- [Puzzle 10: Memory Error Detection & Race Conditions with Sanitizers](./puzzle_10/puzzle_10.md)
+  - [👮🏼‍♂️ Detect Memory Violation](./puzzle_10/memcheck.md)
+  - [🏁 Debug Race Condition](./puzzle_10/racecheck.md)
 
 # Part III: 🧮 GPU Algorithms
 - [Puzzle 11: Pooling](./puzzle_11/puzzle_11.md)

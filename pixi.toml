@@ -89,6 +89,8 @@ viz08 = "cd book/src/puzzle_08 && python puzzle_08_viz.py"
 
 p09 = "mojo problems/p09/p09.mojo"
 
+p10 = "mojo problems/p10/p10.mojo"
+
 p11 = "mojo problems/p11/p11.mojo"
 p11_layout_tensor = "mojo problems/p11/p11_layout_tensor.mojo"
 viz11 = "cd book/src/puzzle_11 && python puzzle_11_viz.py"
@@ -133,6 +135,7 @@ p25 = "mojo problems/p25/p25.mojo"
 p26 = "mojo problems/p26/p26.mojo"
 
 p28 = "mojo problems/p28/p28.mojo"
+
 p29 = "mojo problems/p29/p29.mojo"
 
 generate-animations = { cmd = "echo 'All animations generated!'", depends-on = ["viz01", "viz02", "viz03", "viz04", "viz05", "viz06", "viz07", "viz08", "viz11", "viz12", "viz13", "viz14", "viz15", "viz16", "rooflineviz", "thread_indexing"] }
