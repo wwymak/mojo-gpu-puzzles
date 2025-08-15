@@ -91,10 +91,10 @@
   - [🔢 warp.prefix_sum() Scan Operations](./puzzle_26/warp_prefix_sum.md)
 
 # Part VIII: 🧱 Block-Level Programming
-- [Puzzle 27: Block-Wide Reductions]()
-  - [🔰 block.sum() and block.max()]()
-  - [📈 block.prefix_sum() Patterns]()
-  - [📡 block.broadcast() Communication]()
+- [Puzzle 27: Block-Wide Reductions](./puzzle_27/puzzle_27.md)
+  - [🔰 block.sum() Essentials](./puzzle_27/block_sum.md)
+  - [📈 block.prefix_sum() Parallel Histogram Binning](./puzzle_27/block_prefix_sum.md)
+  - [📡 block.broadcast() Vector Normalization](./puzzle_27/block_broadcast.md)
 
 # Part IX: 🧠 Advanced Memory Systems
 - [Puzzle 28: Async Memory Operations & Copy Overlap](./puzzle_28/puzzle_28.md)
