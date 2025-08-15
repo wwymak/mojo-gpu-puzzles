@@ -109,16 +109,16 @@ This book takes you on a journey from first principles to advanced GPU programmi
 | Essential Skill | Status | Puzzles |
 |-----------------|--------|---------|
 | Thread/Block basics | ✅ **Available** | Part I (1-8) |
-| Debugging GPU Programs | 📋 **Coming Soon** | Part II |
+| Debugging GPU Programs | ✅ **Available** | Part II (9-10) |
 | Core algorithms | ✅ **Available** | Part III (11-16) |
 | MAX Graph integration | ✅ **Available** | Part IV (17-19) |
 | PyTorch integration | ✅ **Available** | Part V (20-22) |
 | Functional patterns & benchmarking | ✅ **Available** | Part VI (23) |
 | Warp programming | ✅ **Available** | Part VII (24-26) |
-| Block-level programming | 📋 **Coming Soon** | Part VIII (27) |
+| Block-level programming | ✅ **Available** | Part VIII (27) |
 | Advanced memory operations | ✅ **Available** | Part IX (28-29) |
-| Performance analysis | 📋 **Coming Soon** | Part X |
-| Modern GPU features | 📋 **Coming Soon** | Part XI |
+| Performance analysis | 📋 **Coming Soon** | Part X (30-32) |
+| Modern GPU features | 📋 **Coming Soon** | Part XI (33-35) |
 
 ### Detailed Learning Objectives
 
@@ -128,7 +128,7 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Work with both raw pointers and LayoutTensor abstractions
 - Learn shared memory basics for inter-thread communication
 
-**Part II: Debugging GPU Programs 📋**
+**Part II: Debugging GPU Programs (Puzzles 9-10) ✅**
 - Master GPU debugger and debugging techniques
 - Learn to use sanitizers for catching memory errors and race conditions
 - Develop systematic approaches to identifying and fixing GPU bugs
@@ -163,7 +163,7 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Implement advanced patterns with shuffle_xor and prefix_sum
 - Combine warp programming with functional patterns effectively
 
-**Part VIII: Block-Level Programming (Puzzle 27) 📋**
+**Part VIII: Block-Level Programming (Puzzle 27) ✅**
 - Master block-wide reductions with `block.sum()` and `block.max()`
 - Learn block-level prefix sum patterns and communication
 - Implement efficient block.broadcast() for intra-block coordination
@@ -174,12 +174,12 @@ This book takes you on a journey from first principles to advanced GPU programmi
 - Learn memory fences and synchronization primitives
 - Master prefetching and cache optimization strategies
 
-**Part X: Performance Analysis & Optimization 📋**
+**Part X: Performance Analysis & Optimization (Puzzles 30-32) 📋**
 - Profile GPU kernels and identify bottlenecks
 - Optimize occupancy and resource utilization
 - Eliminate shared memory bank conflicts
 
-**Part XI: Advanced GPU Features 📋**
+**Part XI: Advanced GPU Features (Puzzles 33-35) 📋**
 - Program tensor cores for AI workloads
 - Implement GPU-based random number generation
 - Master advanced synchronization patterns

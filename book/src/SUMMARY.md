@@ -91,7 +91,7 @@
   - [🔢 warp.prefix_sum() Scan Operations](./puzzle_26/warp_prefix_sum.md)
 
 # Part VIII: 🧱 Block-Level Programming
-- [Puzzle 27: Block-Wide Reductions](./puzzle_27/puzzle_27.md)
+- [Puzzle 27: Block-Wide Patterns](./puzzle_27/puzzle_27.md)
   - [🔰 block.sum() Essentials](./puzzle_27/block_sum.md)
   - [📈 block.prefix_sum() Parallel Histogram Binning](./puzzle_27/block_prefix_sum.md)
   - [📡 block.broadcast() Vector Normalization](./puzzle_27/block_broadcast.md)
