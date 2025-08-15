@@ -6,7 +6,7 @@ from layout.tensor_builder import LayoutTensorBuild as tb
 from utils import IndexList
 from math import log2
 from algorithm.functional import elementwise, vectorize
-from sys import simdwidthof, argv
+from sys import simdwidthof, argv, alignof
 from testing import assert_equal
 from benchmark import Bench, BenchConfig, Bencher, BenchId, keep
 
@@ -29,7 +29,7 @@ fn elementwise_add[
     @parameter
     @always_inline
     fn add[
-        simd_width: Int, rank: Int
+        simd_width: Int, rank: Int, alignment: Int = alignof[dtype]()
     ](indices: IndexList[rank]) capturing -> None:
         idx = indices[0]
         # Note: This is thread-local SIMD - each thread processes its own vector of data
@@ -69,7 +69,7 @@ fn tiled_elementwise_add[
     @parameter
     @always_inline
     fn process_tiles[
-        simd_width: Int, rank: Int
+        simd_width: Int, rank: Int, alignment: Int = alignof[dtype]()
     ](indices: IndexList[rank]) capturing -> None:
         tile_id = indices[0]
 
@@ -112,7 +112,7 @@ fn manual_vectorized_tiled_elementwise_add[
     @parameter
     @always_inline
     fn process_manual_vectorized_tiles[
-        num_threads_per_tile: Int, rank: Int
+        num_threads_per_tile: Int, rank: Int, alignment: Int = alignof[dtype]()
     ](indices: IndexList[rank]) capturing -> None:
         tile_id = indices[0]
 
@@ -160,7 +160,7 @@ fn vectorize_within_tiles_elementwise_add[
     @parameter
     @always_inline
     fn process_tile_with_vectorize[
-        num_threads_per_tile: Int, rank: Int
+        num_threads_per_tile: Int, rank: Int, alignment: Int = alignof[dtype]()
     ](indices: IndexList[rank]) capturing -> None:
         tile_id = indices[0]
         tile_start = tile_id * tile_size
@@ -396,7 +396,7 @@ def main():
         print("Running P21 GPU Benchmarks...")
         print("SIMD width:", SIMD_WIDTH)
         print("-" * 80)
-        bench_config = BenchConfig(max_iters=10, min_warmuptime_secs=0.2)
+        bench_config = BenchConfig(max_iters=10, num_warmup_iters=1)
         bench = Bench(bench_config)
 
         print("Testing SIZE=16, TILE=4")
