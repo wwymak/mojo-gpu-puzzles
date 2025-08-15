@@ -1,4 +1,4 @@
-# The Silent Memory Corruption
+# 👮🏼‍♂️ The Silent Memory Corruption
 
 ## Overview
 

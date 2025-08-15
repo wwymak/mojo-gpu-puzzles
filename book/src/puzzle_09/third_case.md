@@ -2,7 +2,7 @@
 
 ## Overview
 
-You've mastered debugging [memory crashes](./first_case.md) and [logic bugs](./second_case.md). Now face the ultimate GPU debugging challenge: a **barrier deadlock** that causes the program to hang indefinitely with no error messages, no wrong results - just eternal silence.
+You've learned debugging [memory crashes](./first_case.md) and [logic bugs](./second_case.md). Now face the ultimate GPU debugging challenge: a **barrier deadlock** that causes the program to hang indefinitely with no error messages, no wrong results - just eternal silence.
 
 **The complete debugging journey:**
 - **[First Case](./first_case.md)**: Program crashes → Follow error signals → Find memory bugs
@@ -348,9 +348,9 @@ This type of debugging - using CUDA-GDB to analyze thread states, identify diver
 </div>
 </details>
 
-## Next steps: GPU debugging mastery complete
+## Next steps: GPU debugging skills complete
 
-🏆 **You've completed the GPU debugging trilogy!**
+**You've completed the GPU debugging trilogy!**
 
 ### Your complete GPU debugging arsenal
 
@@ -371,7 +371,7 @@ This type of debugging - using CUDA-GDB to analyze thread states, identify diver
 
 ### The professional GPU debugging methodology
 
-You've mastered the systematic approach used by professional GPU developers:
+You've learned the systematic approach used by professional GPU developers:
 
 1. **Read the symptoms** - Crashes? Wrong results? Infinite hangs?
 2. **Form hypotheses** - Memory issue? Logic error? Coordination problem?

@@ -180,7 +180,7 @@ input_buf = ctx.enqueue_create_buffer[dtype](SIZE).enqueue_fill(0)
 
 ## Next Steps: From Crashes to Silent Bugs
 
-🎯 **You've mastered crash debugging!** You can now:
+**You've learned crash debugging!** You can now:
 - ✅ **Systematically investigate GPU crashes** using error messages as clues
 - ✅ **Identify null pointer bugs** through pointer address inspection
 - ✅ **Use CUDA-GDB effectively** for memory-related debugging

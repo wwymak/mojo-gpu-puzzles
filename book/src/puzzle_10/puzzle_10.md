@@ -20,7 +20,7 @@ Welcome to the insidious world of **silent GPU bugs** - errors that hide in the 
 
 ## Why GPU bugs are uniquely sinister
 
-Unlike CPU programs where bugs usually announce themselves with immediate crashes or wrong results, GPU bugs are **masters of disguise**:
+Unlike CPU programs where bugs usually announce themselves with immediate crashes or wrong results, GPU bugs are **experts at hiding**:
 
 **Silent corruption patterns:**
 - **Memory violations that don't crash**: Out-of-bounds access to "lucky" memory locations
@@ -32,7 +32,7 @@ Unlike CPU programs where bugs usually announce themselves with immediate crashe
 - **Race conditions multiply exponentially**: More threads = more opportunities for corruption
 - **Hardware variations mask problems**: Same bug behaves differently across GPU architectures
 
-But here's the exciting part: **once you master GPU sanitization tools, you'll catch these elusive bugs before they ever reach production**.
+But here's the exciting part: **once you learn GPU sanitization tools, you'll catch these elusive bugs before they ever reach production**.
 
 ## Your sanitization toolkit: NVIDIA compute-sanitizer
 
@@ -55,7 +55,7 @@ This puzzle transforms you from someone who *writes* GPU code to someone who can
 
 1. **Silent bug detection** - Find problems that tests don't catch
 2. **Memory corruption investigation** - Track down undefined behavior before it strikes
-3. **Race condition mastery** - Identify and eliminate concurrency hazards
+3. **Race condition detection** - Identify and eliminate concurrency hazards
 4. **Tool selection expertise** - Know exactly which sanitizer to use when
 5. **Production debugging confidence** - Catch bugs before they reach users
 
@@ -70,7 +70,7 @@ Each scenario teaches you to think like a GPU bug detective, following clues tha
 
 ## Your bug hunting journey
 
-This puzzle takes you through a carefully designed progression from discovering silent corruption to mastering parallel debugging:
+This puzzle takes you through a carefully designed progression from discovering silent corruption to learning parallel debugging:
 
 ### 👮🏼‍♂️ [The Silent Corruption Mystery](./memcheck.md)
 
@@ -78,7 +78,7 @@ This puzzle takes you through a carefully designed progression from discovering 
 
 - Investigate programs that pass tests while committing memory crimes
 - Learn to spot the telltale signs of undefined behavior (UB)
-- Master `memcheck` - your memory violation detector
+- Learn `memcheck` - your memory violation detector
 - Understand why GPU hardware masks memory errors
 - Practice systematic memory access validation
 
@@ -90,7 +90,7 @@ This puzzle takes you through a carefully designed progression from discovering 
 
 - Investigate programs that fail randomly due to thread timing
 - Learn to identify shared memory hazards before they corrupt data
-- Master `racecheck` - your race condition detector
+- Learn `racecheck` - your race condition detector
 - Compare `racecheck` vs `synccheck` for different concurrency bugs
 - Practice thread synchronization strategies
 
@@ -121,6 +121,6 @@ But like any good detective, you'll learn to:
 
 **What you'll gain**:
 - **Production-ready debugging skills** used by professional GPU development teams
-- **Silent bug detection mastery** that prevents costly production failures
+- **Silent bug detection skills** that prevent costly production failures
 - **Parallel debugging confidence** for the most challenging concurrency scenarios
 - **Tool expertise** that will serve you throughout your GPU programming career

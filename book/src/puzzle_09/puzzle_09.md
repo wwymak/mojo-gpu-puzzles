@@ -20,7 +20,7 @@ Unlike traditional CPU debugging where you follow a single thread through sequen
 - **Debug optimized code**: JIT compilation, variable optimization, limited symbol information
 - **Use specialized tools**: CUDA-GDB for kernel inspection, thread navigation, parallel state analysis
 
-But here's the exciting part: **once you master GPU debugging, you'll understand parallel computing at a deeper level than most developers ever reach**.
+But here's the exciting part: **once you learn GPU debugging, you'll understand parallel computing at a deeper level than most developers ever reach**.
 
 ## What you'll learn in this puzzle
 
@@ -29,7 +29,7 @@ This puzzle transforms you from someone who *writes* GPU code to someone who can
 ### **Essential skills you'll develop**
 
 1. **Professional debugging workflow** - The systematic approach professionals use
-2. **Tool mastery** - LLDB for host code, CUDA-GDB for GPU kernels
+2. **Tool proficiency** - LLDB for host code, CUDA-GDB for GPU kernels
 3. **Pattern recognition** - Instantly identify common GPU bug types
 4. **Investigation techniques** - Find root causes when variables are optimized out
 5. **Thread coordination debugging** - The most advanced GPU debugging skill
@@ -50,11 +50,11 @@ This puzzle takes you through a carefully designed progression from basic debugg
 
 ### 📚 **Step 1: [Mojo GPU Debugging Essentials](./essentials.md)**
 
-**Foundation building** - Master the tools and workflow
+**Foundation building** - Learn the tools and workflow
 
 - Set up your debugging environment with `pixi` and CUDA-GDB
 - Learn the four debugging approaches: JIT vs binary, CPU vs GPU
-- Master essential CUDA-GDB commands for GPU kernel inspection
+- Learn essential CUDA-GDB commands for GPU kernel inspection
 - Practice with hands-on examples using familiar code from previous puzzles
 - Understand when to use each debugging approach
 
@@ -66,7 +66,7 @@ This puzzle takes you through a carefully designed progression from basic debugg
 
 - Investigate `CUDA_ERROR_ILLEGAL_ADDRESS` crashes
 - Learn systematic pointer inspection techniques
-- Master null pointer detection and validation
+- Learn null pointer detection and validation
 - Practice professional crash analysis workflow
 - Understand GPU memory access failures
 
@@ -78,7 +78,7 @@ This puzzle takes you through a carefully designed progression from basic debugg
 
 - Investigate LayoutTensor-based algorithmic errors
 - Learn execution flow analysis when variables are optimized out
-- Master loop boundary analysis and iteration counting
+- Learn loop boundary analysis and iteration counting
 - Practice pattern recognition in incorrect results
 - Debug without direct variable inspection
 
@@ -89,7 +89,7 @@ This puzzle takes you through a carefully designed progression from basic debugg
 **Barrier deadlock investigation** - Debug a program that hangs forever
 
 - Investigate barrier synchronization failures
-- Master multi-thread state analysis across parallel execution
+- Learn multi-thread state analysis across parallel execution
 - Learn conditional execution path tracing
 - Practice thread coordination debugging
 - Understand the most challenging GPU debugging scenario
@@ -122,15 +122,15 @@ But like any good detective, you'll learn to:
 - **Professional debugging skills** used in GPU development teams
 - **Deep parallel computing understanding** that comes from seeing execution at the thread level
 - **Problem-solving confidence** for the most challenging GPU programming scenarios
-- **Tool mastery** that will serve you throughout your GPU programming career
+- **Tool proficiency** that will serve you throughout your GPU programming career
 
 ## Ready to begin?
 
-GPU debugging is where you transition from *learning* GPU programming to *mastering* it. Every professional GPU developer has spent countless hours debugging parallel code, learning to think in thousands of simultaneous threads, and developing the patience to investigate complex coordination failures.
+GPU debugging is where you transition from *writing* GPU programs to *understanding* them deeply. Every professional GPU developer has spent countless hours debugging parallel code, learning to think in thousands of simultaneous threads, and developing the patience to investigate complex coordination failures.
 
 This is your opportunity to join that elite group.
 
-**Start your debugging journey**: [📚 Mojo GPU Debugging Essentials](./essentials.md)
+**Start your debugging journey**: [Mojo GPU Debugging Essentials](./essentials.md)
 
 ---
 

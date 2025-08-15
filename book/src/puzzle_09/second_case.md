@@ -338,7 +338,7 @@ for offset in range(ITER):           # ← Only 2 iterations: [0, 1]
 
 ## Next Steps: From Logic Bugs to Coordination Deadlocks
 
-🎯 **You've mastered logic bug debugging!** You can now:
+**You've learned logic bug debugging!** You can now:
 - ✅ **Investigate algorithmic errors** without crashes or obvious symptoms
 - ✅ **Use pattern analysis** to trace wrong results back to root causes
 - ✅ **Debug with limited variable access** using execution flow analysis

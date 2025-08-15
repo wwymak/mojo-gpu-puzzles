@@ -1,4 +1,4 @@
-# Debugging Race Conditions
+# 🏁 Debugging Race Conditions
 
 ## Overview
 
