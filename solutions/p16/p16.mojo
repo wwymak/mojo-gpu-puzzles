@@ -133,8 +133,9 @@ fn matmul_tiled[
 from gpu.memory import async_copy_wait_all
 from layout.layout_tensor import copy_dram_to_sram_async
 
-alias NUM_THREADS = TPB*TPB
+alias NUM_THREADS = TPB * TPB
 alias BLOCK_DIM_COUNT = 2
+
 
 fn matmul_idiomatic_tiled[
     layout: Layout, size: Int
@@ -168,14 +169,14 @@ fn matmul_idiomatic_tiled[
 
         # Asynchronously copy tiles to shared memory with consistent orientation
         copy_dram_to_sram_async[
-            thread_layout = load_a_layout,
-            num_threads = NUM_THREADS,
-            block_dim_count = BLOCK_DIM_COUNT
-        ](a_shared,a_tile)
+            thread_layout=load_a_layout,
+            num_threads=NUM_THREADS,
+            block_dim_count=BLOCK_DIM_COUNT,
+        ](a_shared, a_tile)
         copy_dram_to_sram_async[
-            thread_layout = load_b_layout,
-            num_threads = NUM_THREADS,
-            block_dim_count = BLOCK_DIM_COUNT
+            thread_layout=load_b_layout,
+            num_threads=NUM_THREADS,
+            block_dim_count=BLOCK_DIM_COUNT,
         ](b_shared, b_tile)
 
         # Wait for all async copies to complete

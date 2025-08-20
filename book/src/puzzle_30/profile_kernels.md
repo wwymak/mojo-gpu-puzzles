@@ -69,10 +69,10 @@ mojo build --debug-level=full problems/p30/p30.mojo -o problems/p30/p30_profiler
 Profile each kernel to see the big picture:
 
 ```bash
-# Profile each kernel individually using the optimized build
-nsys profile --trace=cuda,osrt,nvtx --output=./problems/p30/kernel1_profile ./problems/p30/p30_profiler --kernel1
-nsys profile --trace=cuda,osrt,nvtx --output=./problems/p30/kernel2_profile ./problems/p30/p30_profiler --kernel2
-nsys profile --trace=cuda,osrt,nvtx --output=./problems/p30/kernel3_profile ./problems/p30/p30_profiler --kernel3
+# Profile each kernel individually using the optimized build (with warmup to avoid cold start effects)
+nsys profile --trace=cuda,osrt,nvtx --delay=2 --output=./problems/p30/kernel1_profile ./problems/p30/p30_profiler --kernel1
+nsys profile --trace=cuda,osrt,nvtx --delay=2 --output=./problems/p30/kernel2_profile ./problems/p30/p30_profiler --kernel2
+nsys profile --trace=cuda,osrt,nvtx --delay=2 --output=./problems/p30/kernel3_profile ./problems/p30/p30_profiler --kernel3
 
 # Analyze the results
 nsys stats --force-export=true ./problems/p30/kernel1_profile.nsys-rep > ./problems/p30/kernel1_profile.txt
@@ -91,9 +91,9 @@ Once you identify the slow kernel, analyze it with NSight Compute:
 
 ```bash
 # Deep-dive into memory patterns for each kernel using the optimized build
-ncu --set=@roofline --section=MemoryWorkloadAnalysis -o ./problems/p30/kernel1_analysis ./problems/p30/p30_profiler --kernel1
-ncu --set=@roofline --section=MemoryWorkloadAnalysis -o ./problems/p30/kernel2_analysis ./problems/p30/p30_profiler --kernel2
-ncu --set=@roofline --section=MemoryWorkloadAnalysis -o ./problems/p30/kernel3_analysis ./problems/p30/p30_profiler --kernel3
+ncu --set=@roofline --section=MemoryWorkloadAnalysis -f -o ./problems/p30/kernel1_analysis ./problems/p30/p30_profiler --kernel1
+ncu --set=@roofline --section=MemoryWorkloadAnalysis -f -o ./problems/p30/kernel2_analysis ./problems/p30/p30_profiler --kernel2
+ncu --set=@roofline --section=MemoryWorkloadAnalysis -f -o ./problems/p30/kernel3_analysis ./problems/p30/p30_profiler --kernel3
 
 # View the results
 ncu --import ./problems/p30/kernel1_analysis.ncu-rep --page details
