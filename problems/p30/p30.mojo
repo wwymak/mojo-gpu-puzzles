@@ -13,7 +13,7 @@ alias dtype = DType.float32
 alias layout = Layout.row_major(SIZE)
 
 
-# Kernel 1: Vector addition implementation
+# ANCHOR: kernel1
 fn kernel1[
     layout: Layout
 ](
@@ -27,7 +27,10 @@ fn kernel1[
         output[i] = a[i] + b[i]
 
 
-# Kernel 2: Vector addition implementation
+# ANCHOR_END: kernel1
+
+
+# ANCHOR: kernel2
 fn kernel2[
     layout: Layout
 ](
@@ -45,7 +48,10 @@ fn kernel2[
         i += stride
 
 
-# Kernel 3: Vector addition implementation
+# ANCHOR_END: kernel2
+
+
+# ANCHOR: kernel3
 fn kernel3[
     layout: Layout
 ](
@@ -62,6 +68,9 @@ fn kernel3[
         if forward_i < size:
             reverse_i = size - 1 - forward_i
             output[reverse_i] = a[reverse_i] + b[reverse_i]
+
+
+# ANCHOR_END: kernel3
 
 
 @parameter
